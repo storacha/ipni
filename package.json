@@ -1,0 +1,17 @@
+{
+  "devDependencies": {
+    "@libp2p/interface-peer-id": "^2.0.2",
+    "ava": "^5.2.0",
+    "standard": "^17.0.0",
+    "tsc": "^2.0.4"
+  },
+  "dependencies": {
+    "@ipld/dag-cbor": "^9.0.0",
+    "@ipld/dag-json": "^10.0.1",
+    "@libp2p/peer-id-factory": "^2.0.3",
+    "@multiformats/multiaddr": "^12.1.2",
+    "multiformats": "^11.0.2",
+    "uint8arrays": "^4.0.3",
+    "varint": "^6.0.0"
+  }
+}
