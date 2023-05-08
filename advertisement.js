@@ -1,25 +1,40 @@
-import { CID } from 'multiformats/cid'
-import { multiaddr } from '@multiformats/multiaddr'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { concat } from 'uint8arrays/concat'
-import varint from 'varint'
-
-// see: https://github.com/ipni/specs/blob/main/IPNI.md#metadata
-export const GRAPHSYNC_METADATA = varint.encode(0x0910)
-export const BITSWAP_METADATA = varint.encode(0x900)
-export const HTTP_METADATA = varint.encode(0x3D0000)
-
+import { RecordEnvelope } from '@libp2p/peer-record'
 /**
+ * @typedef {import('./provider').Provider } Provider
  * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  * @typedef {import('@multiformats/multiaddr').Multiaddr} Multiaddr
  * @typedef {import('multiformats').Link } Link
- * @typedef {import('./provider').Provider } Provider
  * @typedef {Uint8Array} Bytes
  * @typedef {Uint8Array} Metadata
  */
 
+export const SIG_DOMAIN = 'indexer'
+export const AD_SIG_CODEC = new TextEncoder().encode('/indexer/ingest/adSignature')
+export const EP_SIG_CODEC = new TextEncoder().encode('/indexer/ingest/extendedProviderSignature')
+
 /**
- * Signals availability of content to indexer nodes
+ * Sign the serialised form of an Advertisement or a Provider
+ * @param {PeerId} peerId
+ * @param {Uint8Array} bytes - bytes to sign
+ * @param {AD_SIG_CODEC|EP_SIG_CODEC} codec - envelope record codec
+ */
+export async function sign (peerId, bytes, codec) {
+  const digest = await sha256.digest(bytes)
+  const payload = digest.bytes // TODO: is bytes? or digest?
+  const record = {
+    codec,
+    domain: SIG_DOMAIN,
+    marshal: () => payload,
+    equals: () => { throw new Error('Not implemented') }
+  }
+  const sealed = await RecordEnvelope.seal(record, peerId)
+  return sealed.marshal()
+}
+
+/**
+ * Encode and Sign IPNI Advertisment data.
  */
 export class Advertisement {
   /**
@@ -40,111 +55,67 @@ export class Advertisement {
     this.override = options?.override || false
   }
 
-  signableBytes () {
+  /**
+   * Convert to IPLD shape
+   */
+  encode (provider = this.providers[0]) {
+    /** @type {import('./schema').AdvertisementOutput} AdvertisementOutput */
+    const value = {
+      Provider: provider.peerId.toString(),
+      Addresses: provider.addresses.map(a => a.toString()),
+      Signature: new Uint8Array(),
+      Entries: this.entries,
+      ContextID: this.context,
+      Metadata: provider.encodeMetadata(),
+      IsRm: this.remove
+    }
+    if (this.previous) {
+      value.PreviousID = this.previous
+    }
+    if (this.providers.length > 1) {
+      value.ExtendedProvider = {
+        Override: this.override,
+        Providers: this.providers.map(p => ({
+          ID: p.peerId.toString(),
+          Addresses: p.addresses.map(a => a.toString()),
+          Metadata: p.encodeMetadata(),
+          Signature: new Uint8Array()
+        }))
+      }
+    }
+    return value
+  }
+
+  /**
+   * Convert to IPLD shape and sign
+   */
+  async encodeAndSign (provider = this.providers[0]) {
+    // Advertisement signing
+    const value = this.encode(provider)
+    value.Signature = await sign(provider.peerId, this.signableBytes(provider), AD_SIG_CODEC)
+
+    // Extended provider signing
+    if (value.ExtendedProvider) {
+      const { Providers } = value.ExtendedProvider
+      for (let i = 0; i < Providers.length; i++) {
+        const p = this.providers[i]
+        Providers[i].Signature = await sign(p.peerId, p.signableBytes(this), EP_SIG_CODEC)
+      }
+    }
+  }
+
+  /**
+   * Serialise the fields use for signing the Advertisement
+   */
+  signableBytes (provider = this.providers[0]) {
     const isRm = this.remove ? 1 : 0
     return concat([
       this.previous?.bytes ?? new Uint8Array(),
       this.entries.bytes,
-      this.providers[0].peerId.toBytes(),
-      ...this.providers[0].addresses.map(a => a.bytes),
-      this.providers[0].metadata(),
+      provider.peerId.toBytes(),
+      ...provider.addresses.map(a => a.bytes),
+      provider.encodeMetadata(),
       new Uint8Array(isRm)
     ])
   }
-
-  /**
-   * @param {PeerId} peerId
-   * @param {Uint8Array} bytes - bytes to sign
-   */
-  async sign (peerId, bytes) {
-    const digest = await sha256.digest(bytes)
-    const payload = digest.bytes
-    const sealed = await Envelope.seal(
-      {
-        domain: Buffer.from('indexer', 'utf-8'),
-        codec: Buffer.from('/indexer/ingest/adSignature', 'utf-8'),
-        marshal: () => payload
-      },
-      peerId
-    )
-    return sealed.marshal()
-  }
-
-  async signAndExport () {
-    await this.sign(this.providers[0].peerId, this.signableBytes())
-    if (this.providers.length > 1) {
-      for (const p of this.providers) {
-        await this.sign(p.peerId, p.signableBytes(this))
-      }
-    }
-  }
-
-  export () {
-    const topProvider = this.providers[0]
-    const value = {
-      ...(this.previous ? { PreviousID: this.previous } : {}),
-      Provider: topProvider.peerId.toString(),
-      Addresses: topProvider.addresses.map(a => a.toString()),
-      Signature: this.sign(),
-      Entries: this.entries,
-      ContextID: this.context,
-      Metadata: topProvider.metadata(),
-      IsRm: this.remove,
-      ExtendedProvider: {
-        Providers: this.providers.map(p => ({
-          ID: p.peerId.toString(),
-          Addresses: p.addresses.map(a => a.toString()),
-          Metadata: p.metadata(),
-          Signature: p.sign()
-        })),
-        Override: this.override
-      }
-    }
-  }
 }
-
-// export class Provider {
-//   /**
-//    * @param {PeerId} peerId
-//    * @param {Multiaddr[]} addresses
-//    * @param {Metadata} metadata
-//    */
-//   constructor (peerId, addresses, metadata) {
-//     this.peerId = peerId
-//     this.addresses = addresses
-//     this.metadata = metadata
-//   }
-
-//   /** @param {Advertisement} ad */
-//   async sign (ad) {
-//     const providerOverride = ad.override ? 1 : 0
-//     const sigBuf = concat([
-//       ad.previous?.bytes ?? new Uint8Array(),
-//       ad.entries.bytes,
-//       ad.providers[0].peerId.toBytes(),
-//       ad.context,
-//       this.peerId.toBytes(),
-//       ...this.addresses.map(a => a.bytes),
-//       this.metadata,
-//       new Uint8Array(providerOverride)
-//     ])
-
-//     this.signature = sigBuf
-//   }
-// }
-
-// /**
-//  * @param {PeerId} peerId
-//  * @param {Multiaddr[]} addresses
-//  */
-// export function HttpProvider (peerId, addresses) {
-//   return new Provider(peerId, addresses, HTTP_METADATA)
-// }
-
-// /**
-//  * @param {PeerId} peerId
-//  * @param {Multiaddr[]} addresses
-//  */
-// export function BitswapProvider (peerId, addresses) {
-//   return new Provider(peerId, addresses, BITSWAP_METADATA)
-// }

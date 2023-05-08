@@ -4,54 +4,6 @@ import type { Multiaddr } from '@multiformats/multiaddr'
 
 export type Bytes = Uint8Array
 
-export interface Advertisement {
-  /** Link to the previous advertisement */
-  PreviousID?: Link
-  
-  /** Host that provide this advertisement */
-  Provider: PeerId
-
-  /** Multiaddrs for the Provider */
-  Addresses: Multiaddr[]
-
-  /** Link to an interlinked chain of EntryChunk nodes, or an IPLD HAMT ADL, where the keys in the map represent the multihashes and the values are `true` */
-  Entries: Link
-
-  /** unique id for the collection of advertised multihashes. */
-  ContextID: Bytes
-
-  /** Metadata captures contextual information about how to retrieve the advertised content */
-  Metadata: Bytes
-
-  /** does this advertisement represents content that has been removed */
-  IsRm: boolean
-
-  /** Host(s) that provide this advertisement. Takes precedent over the top level Provider and Addresses fields */
-  ExtendedProvider?: ExtendedProvider
-}
-
-/** An additional set of providers where the ad entries are available from */
-export interface ExtendedProvider {
-  /** list of providers where the ad entries are available from */
-  Providers: Provider []
-
-  /** Override defines mechanics for extending chain-level extended providers */
-  Override: boolean
-}
-
-// Provider contains details of a peer where ad entries are available from
-interface Provider {
-  /** peer ID of the Provider */
-  ID: PeerId
-
-  /** Addresses is a list of multiaddresses of the Provider */
-  Addresses: Multiaddr[]
-
-  /* Details how to retrieve the advertised content */
-  Metadata: Bytes
-}
-
-
 // EntryChunk captures a chunk in a chain of entries that collectively contain the multihashes
 // advertised by an Advertisement.
 export interface EntryChunkOutput {
@@ -120,6 +72,6 @@ export interface AdvertisementOutput {
     IsRm: boolean
     // ExtendedProvider might optionally specify a set of providers where the ad entries are available from. 
     // See: https://github.com/ipni/storetheindex/blob/main/doc/ingest.md//extendedprovider
-    ExtendedProvider?: ExtendedProvider
+    ExtendedProvider?: ExtendedProviderOutput
 }
 
