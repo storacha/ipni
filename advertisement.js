@@ -97,6 +97,10 @@ export class Advertisement {
   async encodeAndSign () {
     const ad = this
     const rootProvider = ad.providers[0]
+    if (ad.remove && ad.providers.length > 1) {
+      // see: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L126-L127
+      throw new Error('rm ads are not supported for extended provider signatures')
+    }
 
     // IPLD shape with empty byte values for Signature properties
     const value = ad.encode()
