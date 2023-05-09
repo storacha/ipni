@@ -22,19 +22,27 @@ test('http', async t => {
 
   // https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L99-L110
   t.deepEqual(sigBuf.slice(0, entries.byteLength), entries.bytes)
-
   let rest = sigBuf.slice(entries.byteLength)
-  t.deepEqual(rest.slice(0, hp.peerId.toBytes().byteLength), hp.peerId.toBytes())
 
-  rest = rest.slice(hp.peerId.toBytes().byteLength)
+  const rootId = new TextEncoder().encode(ad.providers[0].peerId.toString())
+  t.deepEqual(rest.slice(0, rootId.byteLength), rootId)
+  rest = rest.slice(rootId.byteLength)
+
+  t.deepEqual(rest.slice(0, context.byteLength), context)
+  rest = rest.slice(context.byteLength)
+
+  const provId = new TextEncoder().encode(hp.peerId.toString())
+  t.deepEqual(rest.slice(0, provId.byteLength), provId)
+  rest = rest.slice(provId.byteLength)
+
   const addrs = new TextEncoder().encode('/dns4/example.org/tcp/443/https')
   t.deepEqual(rest.slice(0, addrs.byteLength), addrs)
-
   rest = rest.slice(addrs.byteLength)
+
   t.deepEqual(rest.slice(0, meta.byteLength), meta)
+  rest = rest.slice(meta.byteLength)
 
   const isRm = new Uint8Array([0])
-  rest = rest.slice(meta.byteLength)
   t.deepEqual(rest.slice(0, isRm.byteLength), isRm)
 })
 

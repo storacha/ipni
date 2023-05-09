@@ -130,18 +130,22 @@ export class Advertisement {
 
   /**
    * Serialise the fields use for signing the Advertisement
-   * reference impl: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L84
+   * note: peerId and multiaddr string bytes are signed rather than using their byte encodings!
+   * impl: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L84
+   * spec: https://github.com/ipni/specs/blob/main/IPNI.md#extendedprovider
    */
   signableBytes () {
+    const text = new TextEncoder()
     const ad = this
     const provider = this.providers[0]
+    const IsRm = ad.remove ? 1 : 0
     return concat([
       ad.previous?.bytes ?? new Uint8Array(),
       ad.entries.bytes,
-      provider.peerId.toBytes(),
-      ...provider.addresses.map(a => a.bytes),
+      text.encode(provider.peerId.toString()),
+      text.encode(provider.addresses.map(a => a.toString()).join('')),
       provider.encodeMetadata(),
-      new Uint8Array(ad.remove ? 1 : 0)
+      new Uint8Array([IsRm])
     ])
   }
 }

@@ -57,7 +57,7 @@ export class Provider {
     if (protocol === 'http') return HTTP_PREFIX
     if (protocol === 'bitswap') return BITSWAP_PREFIX
     if (protocol === 'graphsync') {
-      if (!metadata) throw new Error('metadata is requried')
+      if (!metadata) throw new Error('metadata is required')
       const bytes = encode({
         PieceCID: metadata.pieceCid,
         VerifiedDeal: metadata.verifiedDeal,
@@ -70,20 +70,23 @@ export class Provider {
 
   /**
    * Serialise the fields used to sign an ExtndedProvider record
+   * note: peerId and multiaddr string bytes are signed rather than using their byte encodings!
    * spec: https://github.com/ipni/specs/blob/main/IPNI.md#extendedprovider
    * impl: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L125
    * @param {import('./advertisement').Advertisement} ad
    **/
   signableBytes (ad) {
+    const text = new TextEncoder()
+    const providerOveride = ad.override ? 1 : 0
     return concat([
       ad.previous?.bytes ?? new Uint8Array(),
       ad.entries.bytes,
-      ad.providers[0].peerId.toBytes(),
+      text.encode(ad.providers[0].peerId.toString()),
       ad.context,
-      this.peerId.toBytes(),
-      ...this.addresses.map(a => a.bytes),
+      text.encode(this.peerId.toString()),
+      text.encode(this.addresses.map(a => a.toString()).join('')),
       this.encodeMetadata(),
-      new Uint8Array(ad.override ? 1 : 0)
+      new Uint8Array([providerOveride])
     ])
   }
 }

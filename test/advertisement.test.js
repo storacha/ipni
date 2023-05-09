@@ -8,8 +8,7 @@ import { Provider, HTTP_PREFIX, BITSWAP_PREFIX } from '../provider.js'
 import { Advertisement } from '../advertisement.js'
 
 const schema = await readFile('schema.ipldsch', { encoding: 'utf8' })
-const schemaDescriptor = parseSchema(schema)
-const adValidator = createValidator(schemaDescriptor, 'Advertisement')
+const adValidator = createValidator(parseSchema(schema), 'Advertisement')
 
 test('one provider', async t => {
   const peerId = await createEd25519PeerId()
@@ -33,7 +32,6 @@ test('one provider', async t => {
     Metadata: HTTP_PREFIX,
     IsRm: false
   })
-
   t.true(adValidator(encoded), 'encoded form matches IPLD schema')
 })
 
@@ -84,6 +82,5 @@ test('extended providers', async t => {
     // Metadata: GRAPHSYNC_PREFIX +...,
     Signature: new Uint8Array()
   })
-
   t.true(adValidator(encoded), 'encoded form matches IPLD schema')
 })
