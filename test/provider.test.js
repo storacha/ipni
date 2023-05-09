@@ -24,14 +24,14 @@ test('http', async t => {
   t.deepEqual(sigBuf.slice(0, entries.byteLength), entries.bytes)
   let rest = sigBuf.slice(entries.byteLength)
 
-  const rootId = new TextEncoder().encode(ad.providers[0].peerId.toString())
+  const rootId = new TextEncoder().encode(ad.providers[0].peerId.toCID().toString())
   t.deepEqual(rest.slice(0, rootId.byteLength), rootId)
   rest = rest.slice(rootId.byteLength)
 
   t.deepEqual(rest.slice(0, context.byteLength), context)
   rest = rest.slice(context.byteLength)
 
-  const provId = new TextEncoder().encode(hp.peerId.toString())
+  const provId = new TextEncoder().encode(hp.peerId.toCID().toString())
   t.deepEqual(rest.slice(0, provId.byteLength), provId)
   rest = rest.slice(provId.byteLength)
 

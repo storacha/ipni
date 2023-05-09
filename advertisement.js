@@ -66,7 +66,7 @@ export class Advertisement {
     const provider = this.providers[0]
     /** @type {import('./schema').AdvertisementOutput} AdvertisementOutput */
     const value = {
-      Provider: provider.peerId.toString(),
+      Provider: provider.peerId.toCID().toString(),
       Addresses: provider.addresses.map(a => a.toString()),
       Signature: new Uint8Array(),
       Entries: this.entries,
@@ -81,7 +81,7 @@ export class Advertisement {
       value.ExtendedProvider = {
         Override: this.override,
         Providers: this.providers.map(p => ({
-          ID: p.peerId.toString(),
+          ID: p.peerId.toCID().toString(),
           Addresses: p.addresses.map(a => a.toString()),
           Metadata: p.encodeMetadata(),
           Signature: new Uint8Array()
@@ -115,7 +115,7 @@ export class Advertisement {
       const { Providers } = value.ExtendedProvider
       for (let i = 0; i < Providers.length; i++) {
         const prov = ad.providers[i]
-        if (prov.peerId.toString() !== Providers[i].ID) {
+        if (prov.peerId.toCID().toString() !== Providers[i].ID) {
           throw new Error('providers order should match encoded ExtendedProvider.Providers order')
         }
 
@@ -126,6 +126,7 @@ export class Advertisement {
         Providers[i].Signature = providerSig
       }
     }
+    return value
   }
 
   /**
@@ -142,7 +143,7 @@ export class Advertisement {
     return concat([
       ad.previous?.bytes ?? new Uint8Array(),
       ad.entries.bytes,
-      text.encode(provider.peerId.toString()),
+      text.encode(provider.peerId.toCID().toString()),
       text.encode(provider.addresses.map(a => a.toString()).join('')),
       provider.encodeMetadata(),
       new Uint8Array([IsRm])

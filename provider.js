@@ -71,8 +71,8 @@ export class Provider {
   /**
    * Serialise the fields used to sign an ExtndedProvider record
    * note: peerId and multiaddr string bytes are signed rather than using their byte encodings!
-   * spec: https://github.com/ipni/specs/blob/main/IPNI.md#extendedprovider
    * impl: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L125
+   * spec: https://github.com/ipni/specs/blob/main/IPNI.md#extendedprovider
    * @param {import('./advertisement').Advertisement} ad
    **/
   signableBytes (ad) {
@@ -81,9 +81,9 @@ export class Provider {
     return concat([
       ad.previous?.bytes ?? new Uint8Array(),
       ad.entries.bytes,
-      text.encode(ad.providers[0].peerId.toString()),
+      text.encode(ad.providers[0].peerId.toCID().toString()),
       ad.context,
-      text.encode(this.peerId.toString()),
+      text.encode(this.peerId.toCID().toString()),
       text.encode(this.addresses.map(a => a.toString()).join('')),
       this.encodeMetadata(),
       new Uint8Array([providerOveride])
