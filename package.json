@@ -3,8 +3,9 @@
   "description": "Create signed advertisments for IPNI",
   "version": "1.0.0",
   "type": "module",
-  "main": "advertisement.js",
+  "main": "index.js",
   "scripts": {
+    "prepare": "tsc",
     "pretest": "standard && tsc",
     "test": "ava",
     "link": "standard",
