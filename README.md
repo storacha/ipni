@@ -30,7 +30,7 @@ const http = new Provider(await createEd25519PeerId(), '/dns4/example.org/tcp/44
 const advert = new Advertisement([http], entries, context)
 
 // encode to IPLD form per schema
-const encoded = advert.encodeAndSign()
+const encoded = await advert.encodeAndSign()
 
 t.like(encoded, {
   Provider: http.peerId.toCID().toString(),
@@ -72,7 +72,7 @@ const graph = new Provider(await createEd25519PeerId(), '/ip4/120.0.0.1/tcp/999/
 const advert = new Advertisement([bitswap, http, graph], entries, context)
 
 // encode to IPLD form per schema
-const encoded = advert.encodeAndSign()
+const encoded = await advert.encodeAndSign()
 
 t.like(encoded, {
   // bitswap peer is used for the top level provider details
@@ -87,18 +87,15 @@ t.like(encoded, {
 t.like(encoded.ExtendedProvider.Providers[0], {
   ID: bitswap.peerId.toCID().toString(),
   Addresses: [bitswap.addresses[0].toString()],
-  Metadata: BITSWAP_PREFIX,
-  Signature: new Uint8Array()
+  Metadata: BITSWAP_PREFIX
 })
 t.like(encoded.ExtendedProvider.Providers[1], {
   ID: http.peerId.toCID().toString(),
   Addresses: [http.addresses[0].toString()],
-  Metadata: HTTP_PREFIX,
-  Signature: new Uint8Array()
+  Metadata: HTTP_PREFIX
 })
 t.like(encoded.ExtendedProvider.Providers[2], {
   ID: graph.peerId.toCID().toString(),
-  Addresses: [graph.addresses[0].toString()],
-  Signature: new Uint8Array()
+  Addresses: [graph.addresses[0].toString()]
 })
 ```
