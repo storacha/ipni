@@ -1,6 +1,6 @@
 {
   "name": "ipni",
-  "description": "Create signed advertisments for IPNI",
+  "description": "Create signed advertisements for IPNI",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",

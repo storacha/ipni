@@ -37,7 +37,7 @@ export async function sign (peerId, bytes, codec) {
 }
 
 /**
- * Encode and Sign IPNI Advertisment data.
+ * Encode and Sign IPNI Advertisement data.
  */
 export class Advertisement {
   /**
