@@ -10,9 +10,12 @@ import { RecordEnvelope } from '@libp2p/peer-record'
  * @typedef {Uint8Array} Metadata
  */
 
-export const SIG_DOMAIN = 'indexer'
+// libp2p signed Envelope details
+// see: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L20-L22
+// see: https://github.com/libp2p/js-libp2p-peer-record/blob/master/README.md#envelope
 export const AD_SIG_CODEC = new TextEncoder().encode('/indexer/ingest/adSignature')
 export const EP_SIG_CODEC = new TextEncoder().encode('/indexer/ingest/extendedProviderSignature')
+export const SIG_DOMAIN = 'indexer'
 
 /**
  * Sign the serialised form of an Advertisement or a Provider
@@ -56,9 +59,11 @@ export class Advertisement {
   }
 
   /**
-   * Convert to IPLD shape
+   * Convert to IPLD shape, defined by scheama.ipldsch
+   * see: https://github.com/ipni/go-libipni/blob/main/ingest/schema/schema.ipldsch
    */
-  encode (provider = this.providers[0]) {
+  encode () {
+    const provider = this.providers[0]
     /** @type {import('./schema').AdvertisementOutput} AdvertisementOutput */
     const value = {
       Provider: provider.peerId.toString(),
@@ -89,33 +94,50 @@ export class Advertisement {
   /**
    * Convert to IPLD shape and sign
    */
-  async encodeAndSign (provider = this.providers[0]) {
-    // Advertisement signing
-    const value = this.encode(provider)
-    value.Signature = await sign(provider.peerId, this.signableBytes(provider), AD_SIG_CODEC)
+  async encodeAndSign () {
+    const ad = this
+    const rootProvider = ad.providers[0]
 
-    // Extended provider signing
+    // IPLD shape with empty byte values for Signature properties
+    const value = ad.encode()
+
+    // Advertisement signing
+    const sigBuf = ad.signableBytes()
+    const adSig = await sign(rootProvider.peerId, sigBuf, AD_SIG_CODEC)
+    // root Signature with the signed bytes for ad
+    value.Signature = adSig
+
     if (value.ExtendedProvider) {
       const { Providers } = value.ExtendedProvider
       for (let i = 0; i < Providers.length; i++) {
-        const p = this.providers[i]
-        Providers[i].Signature = await sign(p.peerId, p.signableBytes(this), EP_SIG_CODEC)
+        const prov = ad.providers[i]
+        if (prov.peerId.toString() !== Providers[i].ID) {
+          throw new Error('providers order should match encoded ExtendedProvider.Providers order')
+        }
+
+        // Extended provider signing
+        const sigBuf = prov.signableBytes(ad)
+        const providerSig = await sign(prov.peerId, sigBuf, EP_SIG_CODEC)
+        // update ExtendedProvider.Provider[].Signature with the signed bytes for Provider
+        Providers[i].Signature = providerSig
       }
     }
   }
 
   /**
    * Serialise the fields use for signing the Advertisement
+   * reference impl: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L84
    */
-  signableBytes (provider = this.providers[0]) {
-    const isRm = this.remove ? 1 : 0
+  signableBytes () {
+    const ad = this
+    const provider = this.providers[0]
     return concat([
-      this.previous?.bytes ?? new Uint8Array(),
-      this.entries.bytes,
+      ad.previous?.bytes ?? new Uint8Array(),
+      ad.entries.bytes,
       provider.peerId.toBytes(),
       ...provider.addresses.map(a => a.bytes),
       provider.encodeMetadata(),
-      new Uint8Array(isRm)
+      new Uint8Array(ad.remove ? 1 : 0)
     ])
   }
 }

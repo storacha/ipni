@@ -70,10 +70,11 @@ export class Provider {
 
   /**
    * Serialise the fields used to sign an ExtndedProvider record
+   * spec: https://github.com/ipni/specs/blob/main/IPNI.md#extendedprovider
+   * impl: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L125
    * @param {import('./advertisement').Advertisement} ad
    **/
   signableBytes (ad) {
-    const providerOverride = ad.override ? 1 : 0
     return concat([
       ad.previous?.bytes ?? new Uint8Array(),
       ad.entries.bytes,
@@ -82,7 +83,7 @@ export class Provider {
       this.peerId.toBytes(),
       ...this.addresses.map(a => a.bytes),
       this.encodeMetadata(),
-      new Uint8Array(providerOverride)
+      new Uint8Array(ad.override ? 1 : 0)
     ])
   }
 }
