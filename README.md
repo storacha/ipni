@@ -16,7 +16,7 @@ Encode an signed advertisement for a new batch of entries available from a singl
 import test from 'ava'
 import { CID } from 'multiformats/cid'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
-import { Provider, Advertisment } from '@web3-storage/ipni'
+import { Provider, Advertisement } from '@web3-storage/ipni'
 
 // Link to the latest batch of multihashes
 const entries = CID.parse('bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354') 
@@ -52,7 +52,7 @@ The first provider passed to the Advertisment constructor is used as the top lev
 import test from 'ava'
 import { CID } from 'multiformats/cid'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
-import { Provider, Advertisment } from '@web3-storage/ipni'
+import { Provider, Advertisement } from '@web3-storage/ipni'
 
 // Link to the latest batch of multihashes
 const entries = CID.parse('bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354') 
