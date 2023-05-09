@@ -4,6 +4,10 @@
 
 Supports single and [extended providers](https://github.com/ipni/specs/blob/main/IPNI.md#extendedprovider).
 
+Derived from reference implentation in https://github.com/ipni/go-libipni/blob/main/ingest/schema/envelope.go
+
+See the [IPLD Schema](./schema.ipldsch) for the encoded Advertisment shape. The encoding logic in this lib is validated against that schema.
+
 ## Single provider
 
 Encode an signed advertisement for a new batch of entries available from a single provider
@@ -24,6 +28,8 @@ const http = new Provider(await createEd25519PeerId(), '/dns4/example.org/tcp/44
 
 // an advertisment with a single http provider
 const advert = new Advertisement([http], entries, context)
+
+// encode to IPLD form per schema
 const encoded = advert.encodeAndSign()
 
 t.like(encoded, {
@@ -62,8 +68,10 @@ const graph = new Provider(await createEd25519PeerId(), '/ip4/120.0.0.1/tcp/999/
   verifiedDeal: true
 })
 
-// an advertisment with a single http provider
+// an advertisment with multiple providers
 const advert = new Advertisement([bitswap, http, graph], entries, context)
+
+// encode to IPLD form per schema
 const encoded = advert.encodeAndSign()
 
 t.like(encoded, {
