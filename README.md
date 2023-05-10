@@ -44,7 +44,7 @@ t.like(encoded, {
 
 ## Extended Providers
 
-Encode an signed advertisement with an Extended Providers section where the entries are available from multiple providers or different protocols. 
+Encode a signed advertisement with an Extended Providers section where the entries are available from multiple providers or different protocols. 
 
 The first provider passed to the Advertisement constructor is used as the top level provider for older indexers that don't yet support the `ExtendedProvider` property.
 
