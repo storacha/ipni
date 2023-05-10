@@ -2,11 +2,13 @@
 
 > Create signed advertisements for the [InterPlanetary Network Indexer](https://github.com/ipni/specs/blob/main/IPNI.md)
 
-This library handles encoding and signing of IPNI advertisments. To share them with an indexer follow the guidance in the spec [here](https://github.com/ipni/specs/blob/main/IPNI.md#advertisement-transfer)
+This library handles encoding and signing of IPNI advertisements. To share them with an indexer follow the guidance in the spec [here](https://github.com/ipni/specs/blob/main/IPNI.md#advertisement-transfer)
 
-Supports single and [extended providers](https://github.com/ipni/specs/blob/main/IPNI.md#extendedprovider).
+Supports single and [extended providers](https://github.com/ipni/specs/blob/main/IPNI.md#extendedprovider) by separating Provider and Advertisement creation. 
 
-Derived from reference implentation in https://github.com/ipni/go-libipni/blob/main/ingest/schema/envelope.go
+Pass and array of Providers to your Advertisement and it figures out how to encode it. Only 1? You get a simple Advertisement. More than 1? It's an `ExtendedProvider` encoding for you with a signature from each provider.
+
+Derived from reference implementation in https://github.com/ipni/go-libipni/blob/main/ingest/schema/envelope.go
 
 See the [IPLD Schema](./schema.ipldsch) for the encoded Advertisement shape. The encoding logic in this lib is validated against that schema.
 
@@ -20,12 +22,12 @@ npm i @web3-storage/ipni
 
 ## Single provider
 
-Encode an signed advertisement for a new batch of entries available from a single provider. You will need a mechanism for fetching the peerId and signing keys for your providers, e.g `createfromJSON` from [`@libp2p/peer-id-factory`](https://github.com/libp2p/js-libp2p-peer-id/tree/master/packages/libp2p-peer-id-factory#readme)
+Encode an signed advertisement for a new batch of entries available from a single provider. You will need a mechanism for fetching the peerId and signing keys for your providers, e.g `createFromJSON` from [`@libp2p/peer-id-factory`](https://github.com/libp2p/js-libp2p-peer-id/tree/master/packages/libp2p-peer-id-factory#readme)
 
 ```js
 import test from 'ava'
 import { CID } from 'multiformats/cid'
-import { createfromJSON } from '@libp2p/peer-id-factory'
+import { createFromJSON } from '@libp2p/peer-id-factory'
 import { Provider, Advertisement } from '@web3-storage/ipni'
 
 // Link to the latest batch of multihashes
@@ -39,7 +41,7 @@ const context = new Uint8Array([99])
 const http = new Provider({ 
   protocol: 'http', 
   addresses: '/dns4/example.org/tcp/443/https',
-  peerId: await createfromJSON(/* load you id, and signing keys */)
+  peerId: await createFromJSON(/* load you id, and signing keys */)
 })
 
 // an advertisement with a single http provider

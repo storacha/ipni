@@ -44,7 +44,7 @@ test('previous', async t => {
   t.throws(
     // @ts-expect-error testing that forgetting to set previous is an error
     () => new Advertisement({ providers: [provider], entries, context }),
-    { message: 'previous must be set. If this is your first advertisment pass null' }
+    { message: 'previous must be set. If this is your first advertisement pass null' }
   )
 
   const ad = new Advertisement({ providers: [provider], entries, context, previous })

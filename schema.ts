@@ -14,16 +14,16 @@ export interface EntryChunkOutput {
 
 /** Details for a peer that can provide the entries */
 interface ProviderOutput {
-  /** Peer ID uniquely identfies the Provider */
+  /** Peer ID uniquely identifies the Provider */
   ID: string
   
   /** Multiaddrs to connect to the Provider */
   Addresses: string[]
   
-  /** Hints for how to retrieve the advertised content. For graphysnc it provides PieceID etc */
+  /** Hints for how to retrieve the advertised content. For graphsync it provides PieceID etc */
   Metadata: Bytes
 
-  /** Custom serialised form of this Provider and the parent Advertisement signed with the private key of this Provider */
+  /** Custom serialized form of this Provider and the parent Advertisement signed with the private key of this Provider */
   Signature: Bytes
 }
 

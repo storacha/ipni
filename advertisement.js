@@ -18,7 +18,7 @@ export const EP_SIG_CODEC = new TextEncoder().encode('/indexer/ingest/extendedPr
 export const SIG_DOMAIN = 'indexer'
 
 /**
- * Sign the serialised form of an Advertisement or a Provider
+ * Sign the serialized form of an Advertisement or a Provider
  * @param {PeerId} peerId
  * @param {Uint8Array} bytes - bytes to sign
  * @param {AD_SIG_CODEC|EP_SIG_CODEC} codec - envelope record codec
@@ -54,7 +54,7 @@ export class Advertisement {
       throw new Error('providers, entries, and context are required')
     }
     if (previous === undefined) {
-      throw new Error('previous must be set. If this is your first advertisment pass null')
+      throw new Error('previous must be set. If this is your first advertisement pass null')
     }
     this.previous = previous
     this.providers = Array.isArray(providers) ? providers : [providers]
@@ -65,7 +65,7 @@ export class Advertisement {
   }
 
   /**
-   * Convert to IPLD shape, defined by scheama.ipldsch
+   * Convert to IPLD shape, defined by schema.ipldsch
    * see: https://github.com/ipni/go-libipni/blob/main/ingest/schema/schema.ipldsch
    */
   encode () {
@@ -136,7 +136,7 @@ export class Advertisement {
   }
 
   /**
-   * Serialise the fields use for signing the Advertisement
+   * Serialize the fields use for signing the Advertisement
    * note: peerId and multiaddr string bytes are signed rather than using their byte encodings!
    * impl: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L84
    * spec: https://github.com/ipni/specs/blob/main/IPNI.md#extendedprovider
