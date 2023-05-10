@@ -52,7 +52,7 @@ export interface AdvertisementOutput {
     /** Multiaddrs for the Provider */
     Addresses: string[]
 
-    /** Signed bytes of custom serialised form of Advertisement properties */
+    /** Signed bytes of custom serialized form of Advertisement properties */
     Signature: Bytes
 
     /** CID for chain of EntryChunk nodes, or an IPLD HAMT ADL, where the keys in the map represent the multihashes and the values are `true` */
