@@ -1,13 +1,12 @@
-import { createFromJSON } from '@libp2p/peer-id-factory'
 import { multiaddr } from '@multiformats/multiaddr'
 import { concat } from 'uint8arrays/concat'
 import { encode } from '@ipld/dag-cbor'
 import varint from 'varint'
 
 /**
+ * @typedef {import('./schema').Link } Link
  * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  * @typedef {import('@multiformats/multiaddr').Multiaddr} Multiaddr
- * @typedef {import('multiformats').Link } Link
  *
  * @typedef {object} GraphsyncMetadata
  * @prop {Link} pieceCid
@@ -25,23 +24,21 @@ export const HTTP_PREFIX = new Uint8Array(varint.encode(0x3D0000))
  */
 export class Provider {
   /**
-   * @param {PeerId} peerId
-   * @param {Multiaddr[]|string[]|Multiaddr|string} addresses
-   * @param {'bitswap' | 'http' | 'graphsync'} protocol - transfer protocol available
-   * @param {GraphsyncMetadata} [metadata]
+   * @param {object} config
+   * @param {PeerId} config.peerId
+   * @param {Multiaddr[]|string[]|Multiaddr|string} config.addresses
+   * @param {'bitswap' | 'http' | 'graphsync'} config.protocol - transfer protocol available
+   * @param {GraphsyncMetadata} [config.metadata]
    */
-  constructor (peerId, addresses, protocol, metadata) {
-    if (!protocol) {
-      throw new Error('protocol is required')
-    }
-    if (!addresses) {
-      throw new Error('addresses is required')
-    }
-    if (!peerId) {
-      throw new Error('peerId is required')
+  constructor ({ peerId, addresses, protocol, metadata }) {
+    if (!protocol || !addresses || !peerId) {
+      throw new Error('protocol, addresses, and peerId are required')
     }
     if (protocol !== 'bitswap' && protocol !== 'http' && protocol !== 'graphsync') {
-      throw new Error(`Unknown protocol ${protocol}. Must be one of http, bitswap, graphsync`)
+      throw new Error(`unknown protocol ${protocol}. Must be one of http, bitswap, graphsync`)
+    }
+    if (protocol === 'graphsync' && !metadata) {
+      throw new Error('graphsync metadata is required')
     }
     this.addresses = Array.isArray(addresses) ? addresses.map(m => multiaddr(m)) : [multiaddr(addresses)]
     this.protocol = protocol
@@ -89,17 +86,4 @@ export class Provider {
       new Uint8Array([providerOveride])
     ])
   }
-}
-
-/**
- * @param {object} config
- * @param {string} config.id - peerID
- * @param {string} config.pubKey - public key string
- * @param {string} config.privKey - private key string
- * @param {string[] | string} config.addresses - multiaddrs provider announces
- * @param {'bitswap' | 'http' | 'graphsync'} config.protocol - protocol available
- */
-export async function createProvider ({ id, pubKey, privKey, addresses, protocol }) {
-  const peerId = await createFromJSON({ id, pubKey, privKey })
-  return new Provider(peerId, addresses, protocol)
 }

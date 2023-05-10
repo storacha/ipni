@@ -1,4 +1,7 @@
-import type { Link } from 'multiformats'
+import type { Link as _Link } from 'multiformats'
+
+// fix for link type compat with CID
+export type Link = _Link<any, number, number, 0 | 1>
 export type Bytes = Uint8Array
 
 /** Captures a chunk in a chain of entries advertised by an Advertisement */

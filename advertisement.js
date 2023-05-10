@@ -2,10 +2,10 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import { concat } from 'uint8arrays/concat'
 import { RecordEnvelope } from '@libp2p/peer-record'
 /**
+ * @typedef {import('./schema').Link } Link
  * @typedef {import('./provider').Provider } Provider
  * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  * @typedef {import('@multiformats/multiaddr').Multiaddr} Multiaddr
- * @typedef {import('multiformats').Link } Link
  * @typedef {Uint8Array} Bytes
  * @typedef {Uint8Array} Metadata
  */
@@ -41,21 +41,27 @@ export async function sign (peerId, bytes, codec) {
  */
 export class Advertisement {
   /**
-   * @param {Provider[]} providers
-   * @param {Link} entries
-   * @param {Bytes} context
-   * @param {object} [options]
-   * @param {Link} [options.previous]
-   * @param {boolean} [options.remove]
-   * @param {boolean} [options.override]
+   * @param {object} config
+   * @param {Provider[]|Provider} config.providers
+   * @param {Link} config.entries
+   * @param {Bytes} config.context
+   * @param {Link | null} config.previous
+   * @param {boolean} [config.remove]
+   * @param {boolean} [config.override]
    */
-  constructor (providers, entries, context, options) {
-    this.providers = providers
+  constructor ({ previous, providers, entries, context, remove, override }) {
+    if (!providers || !entries || !context) {
+      throw new Error('providers, entries, and context are required')
+    }
+    if (previous === undefined) {
+      throw new Error('previous must be set. If this is your first advertisment pass null')
+    }
+    this.previous = previous
+    this.providers = Array.isArray(providers) ? providers : [providers]
     this.entries = entries
     this.context = context
-    this.previous = options?.previous
-    this.remove = options?.remove || false
-    this.override = options?.override || false
+    this.remove = remove || false
+    this.override = override || false
   }
 
   /**

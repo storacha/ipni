@@ -1,6 +1,6 @@
 {
   "name": "ipni",
-  "description": "Create signed advertisements for IPNI",
+  "description": "Create signed advertisements for the IPFS Network Indexer",
   "version": "1.0.0",
   "type": "module",
   "main": "index.js",
@@ -11,31 +11,32 @@
     "link": "standard",
     "tsc": "tsc"
   },
-  "devDependencies": {
-    "@ipld/schema": "^4.1.5",
-    "@libp2p/interface-peer-id": "^2.0.2",
-    "@types/varint": "^6.0.1",
-    "ava": "^5.2.0",
-    "ipld-schema-validator": "^1.0.2",
-    "standard": "^17.0.0",
-    "typescript": "^5.0.4"
-  },
   "dependencies": {
     "@ipld/dag-cbor": "^9.0.0",
     "@ipld/dag-json": "^10.0.1",
-    "@libp2p/peer-id-factory": "^2.0.3",
     "@libp2p/peer-record": "^5.0.3",
     "@multiformats/multiaddr": "^12.1.2",
     "multiformats": "^11.0.2",
     "uint8arrays": "^4.0.3",
     "varint": "^6.0.0"
   },
+  "devDependencies": {
+    "@ipld/schema": "^4.1.5",
+    "@libp2p/interface-peer-id": "^2.0.2",
+    "@libp2p/peer-id-factory": "^2.0.3",
+    "@types/varint": "^6.0.1",
+    "ava": "^5.2.0",
+    "ipld-schema-validator": "^1.0.2",
+    "standard": "^17.0.0",
+    "typescript": "^5.0.4"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/web3-storage/ipni.git"
   },
   "keywords": [
-    "IPNI"
+    "IPNI",
+    "IPFS"
   ],
   "author": "olizilla",
   "license": "MIT",
