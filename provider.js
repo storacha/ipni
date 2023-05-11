@@ -74,7 +74,7 @@ export class Provider {
    **/
   signableBytes (ad) {
     const text = new TextEncoder()
-    const providerOveride = ad.override ? 1 : 0
+    const providerOverride = ad.override ? 1 : 0
     return concat([
       ad.previous?.bytes ?? new Uint8Array(),
       ad.entries.bytes,
@@ -83,7 +83,7 @@ export class Provider {
       text.encode(this.peerId.toCID().toString()),
       text.encode(this.addresses.map(a => a.toString()).join('')),
       this.encodeMetadata(),
-      new Uint8Array([providerOveride])
+      new Uint8Array([providerOverride])
     ])
   }
 }

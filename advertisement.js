@@ -74,16 +74,22 @@ export class Advertisement {
   }
 
   /**
-   * Convert to IPLD shape, defined by schema.ipldsch
-   * see: https://github.com/ipni/go-libipni/blob/main/ingest/schema/schema.ipldsch
+   * Convert to IPLD shape and sign
    */
-  encode () {
-    const provider = this.providers[0]
+  async encodeAndSign () {
+    const ad = this
+    const provider = ad.providers[0]
+
+    if (ad.remove && ad.providers.length > 1) {
+      // see: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L126-L127
+      throw new Error('rm ads are not supported for extended provider signatures')
+    }
+
     /** @type {import('./schema').AdvertisementOutput} AdvertisementOutput */
     const value = {
       Provider: provider.peerId.toCID().toString(),
       Addresses: provider.addresses.map(a => a.toString()),
-      Signature: new Uint8Array(),
+      Signature: await sign(provider.peerId, ad.signableBytes(), AD_SIG_CODEC),
       Entries: this.entries,
       ContextID: this.context,
       Metadata: provider.encodeMetadata(),
@@ -92,53 +98,20 @@ export class Advertisement {
     if (this.previous) {
       value.PreviousID = this.previous
     }
+    // ExtendedProvider mode!
     if (this.providers.length > 1) {
-      value.ExtendedProvider = {
-        Override: this.override,
-        Providers: this.providers.map(p => ({
+      const Providers = []
+      for (const p of this.providers) {
+        Providers.push({
           ID: p.peerId.toCID().toString(),
           Addresses: p.addresses.map(a => a.toString()),
           Metadata: p.encodeMetadata(),
-          Signature: new Uint8Array()
-        }))
+          Signature: await sign(p.peerId, p.signableBytes(ad), EP_SIG_CODEC)
+        })
       }
-    }
-    return value
-  }
-
-  /**
-   * Convert to IPLD shape and sign
-   */
-  async encodeAndSign () {
-    const ad = this
-    const rootProvider = ad.providers[0]
-    if (ad.remove && ad.providers.length > 1) {
-      // see: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L126-L127
-      throw new Error('rm ads are not supported for extended provider signatures')
-    }
-
-    // IPLD shape with empty byte values for Signature properties
-    const value = ad.encode()
-
-    // Advertisement signing
-    const sigBuf = ad.signableBytes()
-    const adSig = await sign(rootProvider.peerId, sigBuf, AD_SIG_CODEC)
-    // root Signature with the signed bytes for ad
-    value.Signature = adSig
-
-    if (value.ExtendedProvider) {
-      const { Providers } = value.ExtendedProvider
-      for (let i = 0; i < Providers.length; i++) {
-        const prov = ad.providers[i]
-        if (prov.peerId.toCID().toString() !== Providers[i].ID) {
-          throw new Error('providers order should match encoded ExtendedProvider.Providers order')
-        }
-
-        // Extended provider signing
-        const sigBuf = prov.signableBytes(ad)
-        const providerSig = await sign(prov.peerId, sigBuf, EP_SIG_CODEC)
-        // update ExtendedProvider.Provider[].Signature with the signed bytes for Provider
-        Providers[i].Signature = providerSig
+      value.ExtendedProvider = {
+        Providers,
+        Override: this.override
       }
     }
     return value
