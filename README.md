@@ -58,7 +58,7 @@ t.like(encoded, {
   IsRm: false
 })
 
-// next step: encode with you favourite IPLD codec and share with an indexer node
+// next step: encode with you favorite IPLD codec and share with an indexer node
 ```
 
 ## Extended Providers
@@ -89,7 +89,7 @@ const graf = new Provider({ protocol: 'graphsync', addresses: ['/ip4/120.0.0.1/t
 // an advertisement with multiple providers. It's the first in the chain, so `previous: null`
 const advert = new Advertisement([bits, http, graf], entries, context, previous: null)
 
-// encode to IPLD form per schema and sign Advertisement and ExtendedProvder
+// encode to IPLD form per schema and sign Advertisement and ExtendedProvider
 const encoded = await advert.encodeAndSign()
 
 t.like(encoded, {

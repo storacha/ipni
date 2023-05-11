@@ -24,8 +24,7 @@ export const SIG_DOMAIN = 'indexer'
  * @param {AD_SIG_CODEC|EP_SIG_CODEC} codec - envelope record codec
  */
 export async function sign (peerId, bytes, codec) {
-  const digest = await sha256.digest(bytes)
-  const payload = digest.bytes // TODO: is bytes? or digest?
+  const payload = await hashSignableBytes(bytes)
   const record = {
     codec,
     domain: SIG_DOMAIN,
@@ -34,6 +33,16 @@ export async function sign (peerId, bytes, codec) {
   }
   const sealed = await RecordEnvelope.seal(record, peerId)
   return sealed.marshal()
+}
+
+/**
+ * `sign` must take the sha-256 multihash of the signable bytes and sign that.
+ * see: https://github.com/ipni/go-libipni/blob/81286e4b32baed09e6151ce4f8e763f449b81331/ingest/schema/envelope.go#L119
+ * @param {Uint8Array} bytes
+ */
+export async function hashSignableBytes (bytes) {
+  const digest = await sha256.digest(bytes)
+  return digest.bytes
 }
 
 /**

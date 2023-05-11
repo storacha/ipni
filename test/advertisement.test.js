@@ -5,7 +5,7 @@ import { parse as parseSchema } from 'ipld-schema'
 import { create as createValidator } from 'ipld-schema-validator'
 import { readFile } from 'fs/promises'
 import { Provider, HTTP_PREFIX, BITSWAP_PREFIX, GRAPHSYNC_PREFIX } from '../provider.js'
-import { Advertisement } from '../advertisement.js'
+import { Advertisement, hashSignableBytes } from '../advertisement.js'
 import { encode, decode } from '@ipld/dag-json'
 
 const schema = await readFile('schema.ipldsch', { encoding: 'utf8' })
@@ -30,6 +30,20 @@ test('one provider', async t => {
   })
   t.falsy(encoded.PreviousID, 'previous is not set')
   t.true(adValidator(encoded), 'encoded form matches IPLD schema')
+})
+
+test('hashed sigBuf length', async t => {
+  const peerId = await createEd25519PeerId()
+  const addresses = ['/dns4/example.org/tcp/443/https']
+  const protocol = 'http'
+  const entries = CID.parse('bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354')
+  const context = new Uint8Array([99])
+  const provider = new Provider({ peerId, addresses, protocol })
+  const ad = new Advertisement({ providers: [provider], entries, context, previous: null })
+  const hashed = await hashSignableBytes(ad.signableBytes())
+  // the hashed signable bytes should be 34 bytes long
+  // see: https://github.com/ipni/go-libipni/blob/81286e4b32baed09e6151ce4f8e763f449b81331/ingest/schema/envelope.go#L260-L262
+  t.is(hashed.length, 34)
 })
 
 test('previous', async t => {
@@ -99,14 +113,38 @@ test('extended providers', async t => {
   t.true(adValidator(encoded), 'encoded form matches IPLD schema')
 })
 
-test.skip('parity [requires local copy of peerId.json]', async t => {
-  const entries = CID.parse('baguqeeraig6inklip3i5afj5neqy2r7mpixdg3ej6cwvg4wiyzc2s6dakeca')
-  const context = Buffer.from('YmFndXFlZXJhaWc2aW5rbGlwM2k1YWZqNW5lcXkycjdtcGl4ZGczZWo2Y3d2ZzR3aXl6YzJzNmRha2VjYQ==', 'base64')
-  const peerId = await createFromJSON(JSON.parse(await readFile('peerId.json', { encoding: 'utf-8' })))
-  const providers = new Provider({ protocol: 'bitswap', addresses: '/dns4/elastic.dag.house/tcp/443/wss', peerId })
-  const previous = CID.parse('baguqeerac3sm46p47bkdubg7tv7spipp2pmwj4og44evcp766wwffwnhhtsa')
+test('parity with publisher-lambda no previous', async t => {
+  const expected = JSON.parse(await readFile('test/fixtures/ad-1/ad.json', { encoding: 'utf-8' }))
+  const entries = CID.parse(expected.Entries['/'])
+  const context = Buffer.from(expected.ContextID['/'].bytes, 'base64')
+  const peerId = await createFromJSON(JSON.parse(await readFile('test/fixtures/ad-1/peerId.json', { encoding: 'utf-8' })))
+  const providers = new Provider({ protocol: 'bitswap', addresses: expected.Addresses, peerId })
+  const previous = null
   const ad = new Advertisement({ previous, providers, entries, context })
   const value = await ad.encodeAndSign()
-  const expected = JSON.parse(await readFile('test/advertisement.json', { encoding: 'utf-8' }))
+
   t.deepEqual(decode(encode(value)), decode(encode(expected)))
+
+  // note: there is no (reasonable) way to get encoded byte parity with the old publisher-lambda!
+  // it used base64pad strings for ContextID bytes, which we can't recreate with typedarrays.
+  // see: https://github.com/ipld/js-dag-json/issues/106
+  // see: https://github.com/elastic-ipfs/publisher-lambda/blob/8a71991792a7baf27bd02599316b5c01c23a6280/src/handlers/advertisement.js#L190
+  // const adCid = CID.createV1(dagJsonCode, await sha256.digest(encode(value)))
+  // t.is(adCid.toString(), 'baguqeera2s55wh2lzxeu2sszjq4tcs5lm6yhpy65bcwxvqk6w3dpmir73yia')
+})
+
+test('parity with publisher-lambda with previous', async t => {
+  const expected = JSON.parse(await readFile('test/fixtures/ad-2/ad.json', { encoding: 'utf-8' }))
+  const entries = CID.parse(expected.Entries['/'])
+  const context = Buffer.from(expected.ContextID['/'].bytes, 'base64')
+  const peerId = await createFromJSON(JSON.parse(await readFile('test/fixtures/ad-2/peerId.json', { encoding: 'utf-8' })))
+  const providers = new Provider({ protocol: 'bitswap', addresses: expected.Addresses, peerId })
+  const previous = CID.parse(expected.PreviousID['/'])
+  const ad = new Advertisement({ previous, providers, entries, context })
+  const value = await ad.encodeAndSign()
+
+  t.deepEqual(decode(encode(value)), decode(encode(expected)))
+
+  // const adCid = CID.createV1(dagJsonCode, await sha256.digest(encode(value)))
+  // t.is(adCid.toString(), 'baguqeeracy3dyhdtqxo2wqcvekr6zbdsztjw54uqezjvrnadyrfnpvwzcxta')
 })
