@@ -1,0 +1,25 @@
+{
+  "Addresses": [
+    "/ip4/12.34.56.78/tcp/999/ws"
+  ],
+  "ContextID": {
+    "/": {
+      "bytes": "YmFndXFlZXJhNHZkNXR5Ymd4YXViNGVsd2FnNnY3eWhzd2hmbGZ5b3BvZ3I3cjMyYjdkcHQ1bXFmbW1vcQ=="
+    }
+  },
+  "Entries": {
+    "/": "baguqeera4vd5tybgxaub4elwag6v7yhswhflfyopogr7r32b7dpt5mqfmmoq"
+  },
+  "IsRm": false,
+  "Metadata": {
+    "/": {
+      "bytes": "gBI"
+    }
+  },
+  "Provider": "QmVRvNE5oikD3aPkNfCLufvwQPsjvwYiwxS4PyAktTU2fM",
+  "Signature": {
+    "/": {
+      "bytes": "CqsCCAASpgIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDAVBkdP8VR72bWmtugfzEcWOkC8FCvS9WlgT05bedleDxLYhUZuNmlyd2e4SPrXx6SRJeoRZ/Cs8YZ/tz5Api/4inytCZl1fG3VVpeKXRv4bpkxcl0ZXWMLwT2vxxXtTXq/3yaUMVIelqxRWLK58PzBsbeDydWMcMfxta2z7Mp1sUQmcQ1nNk5HjWetVXrPW6/RtfvcLLU6FHw3nROOFye8qbg+KH697DJZOLgroJwzmCxvstaIsLs1G7z2hZt7/oWoiMbC/lGMwzYBRKxiEK7LA/28qnY1VIxMO9x1MWke5Su1NBlHl5EfiFPGXmKyIzkW80CCxHKek9M+YEM0G5LAgMBAAESGy9pbmRleGVyL2luZ2VzdC9hZFNpZ25hdHVyZRoiEiAH3mdELo0wdPUUS23SuCyANyxJKCXUANDD8xJR6xbJkCqAAm02tm4n4YX0Nazht/Unx4rDHdTYVxbbMB3aeZznXdYDCZM+IXZjbPsCWIe4eImxn+/9w/ylLpgbI4I60eJ6wtiiYUzHP6MEaRyqupN4XBG8FVsLIgll1pXzA6kW4kkRSfjcR768FZVl8NhxQYTj2GAMlOzlnudM/4Qbhe2dcnoKhU4rqZhVCYlsqdG5PBRezqLPafjcv4SBYrO5SDhtHRmHkNK9T33FmTxwI4kjN4zfVmE9huMlXiCAfaiCdhBcPKobnxMDBt4Ew+PCDGbsrE7kNE2BM7ia3sud4LPDE91FZsf0grysB0oq+TD2+znb48PB0ttlYFAhjchzI+6JgX4"
+    }
+  }
+}
