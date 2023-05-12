@@ -14,7 +14,7 @@ jobs:
           package-name: '@web3-storage/ipni'
       - uses: actions/checkout@v3
       - uses: ./.github/actions/test
-      - run: npm publish
+      - run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
         if: ${{ steps.release.outputs.release_created }}

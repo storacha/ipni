@@ -1,5 +1,5 @@
 {
-  "name": "ipni",
+  "name": "@web3-storage/ipni",
   "description": "Create signed advertisements for the IPFS Network Indexer",
   "version": "1.0.0",
   "type": "module",
