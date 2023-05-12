@@ -64,7 +64,7 @@ export class Advertisement {
    * @param {boolean} [config.override]
    */
   constructor ({ previous, providers, context, entries = NO_ENTRIES, remove = false, override = false }) {
-    if (!providers || !entries || !context) {
+    if (!providers || !context) {
       throw new Error('providers and context are required')
     }
     if (previous === undefined) {
@@ -126,7 +126,6 @@ export class Advertisement {
    * Serialize the fields use for signing the Advertisement
    * note: peerId and multiaddr string bytes are signed rather than using their byte encodings!
    * impl: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L84
-   * spec: https://github.com/ipni/specs/blob/main/IPNI.md#extendedprovider
    */
   signableBytes () {
     const text = new TextEncoder()
