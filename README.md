@@ -12,7 +12,7 @@ Derived from reference implementation in https://github.com/ipni/go-libipni/blob
 
 See the [IPLD Schema](./schema.ipldsch) for the encoded Advertisement shape. The encoding logic in this lib is validated against that schema.
 
-## Getting started
+## Getting started
 
 Use `node` > 18. Install as dependency from `npm`. 
 
