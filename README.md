@@ -1,6 +1,9 @@
 # ipni
 
-> Create signed advertisements for the [InterPlanetary Network Indexer](https://github.com/ipni/specs/blob/main/IPNI.md)
+Create signed Advertisement records for the [InterPlanetary Network Indexer](https://github.com/ipni/specs/blob/main/IPNI.md)
+
+> IPNI is a content routing system optimized to take billions of CIDs from large-scale data providers, and allow fast lookup of provider information using these CIDs over a simple HTTP REST API.
+> – https://github.com/ipni
 
 This library handles encoding and signing of IPNI advertisements. To share them with an indexer follow the guidance in the spec [here](https://github.com/ipni/specs/blob/main/IPNI.md#advertisement-transfer)
 
@@ -98,43 +101,10 @@ Encode a signed advertisement with an Extended Providers section where the entri
 
 The first provider passed to the Advertisement constructor is used as the top level provider for older indexers that don't yet support the `ExtendedProvider` property.
 
-```js
-import fs from 'node:fs'
-import { CID } from 'multiformats/cid'
-import * as Block from 'multiformats/block'
-import { sha256 } from 'multiformats/hashes/sha2'
-import * as dagJson from '@ipld/dag-json'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+https://github.com/web3-storage/ipni/blob/b00c02f3cc34e65400c664ee6fe68ff50f28a72e/examples/extended-providers.js#L1-L38
 
-import { Provider, Advertisement } from '../index.js'
-
-const previous = null // CID for previous batch. Pass `null` for the first advertisement in your chain
-const entries = CID.parse('baguqeera4vd5tybgxaub4elwag6v7yhswhflfyopogr7r32b7dpt5mqfmmoq') // entry batch to provide
-const context = new Uint8Array([99]) // custom id for a set of multihashes
-
-// create a provider for each peer + protocol that will provider your entries
-const bits = new Provider({ protocol: 'bitswap', addresses: ['/ip4/12.34.56.1/tcp/999/ws'], peerId: await createEd25519PeerId() })
-const http = new Provider({ protocol: 'http', addresses: ['/dns4/dag.house/tcp/443/https'], peerId: await createEd25519PeerId() })
-const graf = new Provider({ protocol: 'graphsync', addresses: ['/ip4/120.0.0.1/tcp/1234'], peerId: await createEd25519PeerId(),
-  metadata: {
-    pieceCid: CID.parse('bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354'),
-    fastRetrieval: true,
-    verifiedDeal: true
-  }
-})
-
-// an advertisement with a single http provider
-const advert = new Advertisement({ providers: [http, bits, graf], entries, context, previous })
-
-// sign and export to IPLD form per schema
-const value = await advert.encodeAndSign()
-
-// encode with you favorite IPLD codec and share with indexer node
-const block = await Block.encode({ value, codec: dagJson, hasher: sha256 })
-
-// share with indexer
-fs.writeFileSync(block.cid.toString(), block.bytes)
-```
+<details>
+  <summary>dag-json output</summary>
 
 ```json
 {
@@ -217,125 +187,4 @@ fs.writeFileSync(block.cid.toString(), block.bytes)
 }
 ```
 
-## Background
-
-IPNI is the InterPlanetary Network Indexer (https://ipni.io/)
-
-> a content routing system optimized to take billions of CIDs from large-scale data providers, and allow fast lookup of provider information using these CIDs over a simple HTTP REST API.
-> – https://github.com/ipni
-
-You can look up any web3.storage hosted cid via [https://cid.contact](https://cid.contact/cid/bafybeidluj5ub7okodgg5v6l4x3nytpivvcouuxgzuioa6vodg3xt2uqle)
-
-It gives you enough info to know who to connect to and what protocol to use to fetch the bytes for that CID.
-
-```sh
-curl https://cid.contact/cid/bafybeidluj5ub7okodgg5v6l4x3nytpivvcouuxgzuioa6vodg3xt2uqle | jq
-```
-
-```json
-{
-  "MultihashResults": [
-    {
-      "Multihash": "EiBrontA/cpwzG7Xy+X23E3orUTqUubNEOB6rhm3eeqQWQ==",
-      "ProviderResults": [
-        {
-          "ContextID": "AXESIKh/3PQkIATBPajt5iCX/WI0cXmT3OP056vui7L+xe/R",
-          "Metadata": "kBKjaFBpZWNlQ0lE2CpYKAABgeIDkiAgz64SZ/fTuarQ9EXvlGt9gtLxS+1fV7ehz13mGD0W2xJsVmVyaWZpZWREZWFs9W1GYXN0UmV0cmlldmFs9Q==",
-          "Provider": {
-            "ID": "12D3KooWAWcPeDRjFMasZ9D7yfr2Znh3kefPUuyVb66DsM3A72oz",
-            "Addrs": [
-              "/ip4/1.214.241.108/tcp/30000"
-            ]
-          }
-        },
-        {
-          "ContextID": "YmFndXFlZXJhaGN2M2VhczJrcGE0eTdoc2F5N3BwM3J3dGoyc3R5dnltb3Z6bXBjdnFpeTNpcGZyMzN3cQ==",
-          "Metadata": "gBI=",
-          "Provider": {
-            "ID": "QmQzqxhK82kAmKvARFZSkUVS6fo9sySaiogAnx5EnZ6ZmC",
-            "Addrs": [
-              "/dns4/elastic.dag.house/tcp/443/wss"
-            ]
-          }
-        }
-      ]
-    }
-  ]
-}
-```
-
-### How do I get on the list?
-
-To get your CIDs on that list, you need to publish Advertisements to an indexer node.
-
-An IPNI Advertisement is a IPLD object that specifies
-
-- A link to a batch of multihashes for the CIDs you are providing
-- The details of how to get them including:
-  - **PeerID** - _so you can verify them_
-  - a set of **multiaddrs** - _so you can connect to them_
-  - the **protocol** to use - _so you know how they like to be spoken to_
-
-There is an IPLD Schema for a valid Advertisement that you can use to verify your docs are the right shape and values have the right type. This library uses it [here](https://github.com/web3-storage/ipni/blob/b00c02f3cc34e65400c664ee6fe68ff50f28a72e/test/advertisement.test.js#L11-L12)
-
-### Where do i sign!?
-
-Advertisements are **Signed** with the private key for the PeerID for the provider.
-
-They have a custom encoded form to decide what bytes to sign:
-```js
-  return concat([
-    ad.previous?.bytes ?? new Uint8Array(),
-    ad.entries.bytes,
-    text.encode(provider.peerId.toString()),
-    text.encode(provider.addresses.map(a => a.toString()).join('')),
-    provider.encodeMetadata(),
-    new Uint8Array([IsRm])
-  ])
-```
-
-You then sha-256 multihash encode those bytes sign the multihash bytes as a [libp2p Envelope](https://github.com/libp2p/specs/pull/217), as originally spec'd by @yusefnapora
-
-```js
-export async function sign (peerId, bytes, codec) {
-  const payload = await hashSignableBytes(bytes)
-  const record = {
-    codec,
-    domain: SIG_DOMAIN,
-    marshal: () => payload,
-    equals: () => { throw new Error('Not implemented') }
-  }
-  const sealed = await RecordEnvelope.seal(record, peerId)
-  return sealed.marshal()
-}
-```
-https://github.com/web3-storage/ipni/blob/b00c02f3cc34e65400c664ee6fe68ff50f28a72e/advertisement.js#L31-L41
-
-
-### But I'm a big deal, I provide many things from many nodes
-
-Of course. You'll want the ExtendedProvider advertisement form.
-
-Originally you could only specify a single provider as the source for CIDs. Now you can announce that you can provide them via Bitswap, HTTP and Graphsync all at once!
-
-You just have to duplicate the root level provider info into an ExtendedProviders.Providers array, and add a Provider record for each one.
-
-They must each be signed with the private key for that provider PeerID. And they have a custom encoded form!
-
-```js
-  signableBytes (ad) {
-    const text = new TextEncoder()
-    const providerOverride = ad.override ? 1 : 0
-    return concat([
-      ad.previous?.bytes ?? new Uint8Array(),
-      ad.entries.bytes,
-      text.encode(ad.providers[0].peerId.toString()),
-      ad.context,
-      text.encode(this.peerId.toString()),
-      text.encode(this.addresses.map(a => a.toString()).join('')),
-      this.encodeMetadata(),
-      new Uint8Array([providerOverride])
-    ])
-  }
-```
-https://github.com/web3-storage/ipni/blob/b00c02f3cc34e65400c664ee6fe68ff50f28a72e/provider.js#L75-L88
+</details>
