@@ -25,7 +25,7 @@ const graf = new Provider({
   }
 })
 
-// an advertisement with a single http provider
+// an advertisement with a single multiple providers
 const advert = new Advertisement({ providers: [http, bits, graf], entries, context, previous })
 
 // sign and export to IPLD form per schema

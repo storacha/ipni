@@ -27,7 +27,7 @@ npm i @web3-storage/ipni
 
 Encode an signed advertisement for a new batch of entries available from a single provider. You will need a mechanism for fetching the peerId and signing keys for your providers, e.g `createFromJSON` from [`@libp2p/peer-id-factory`](https://github.com/libp2p/js-libp2p-peer-id/tree/master/packages/libp2p-peer-id-factory#readme)
 
-Construct A Provider with the peerID and signing keys, and pass it to and Advertisement along with the entries CID, a context ID, and a CID for the previous batch of entries or `null` if this is the first advertisement in your chain.
+Construct A Provider with the peerID and signing keys, and pass it to an Advertisement along with the entries CID, a context ID, and a CID for the previous batch of entries or `null` if this is the first advertisement in your chain.
 
 Call `advertisement.signAndEncode()` to export a valid Advertisement ready for encoding as IPLD.
 
@@ -129,7 +129,7 @@ const graf = new Provider({
   }
 })
 
-// an advertisement with a single http provider
+// an advertisement with a single multiple providers
 const advert = new Advertisement({ providers: [http, bits, graf], entries, context, previous })
 
 // sign and export to IPLD form per schema
