@@ -32,7 +32,7 @@ Construct A Provider with the peerID and signing keys, and pass it to an Adverti
 Call `advertisement.signAndEncode()` to export a valid Advertisement ready for encoding as IPLD.
 
 ```js
-import fs from 'node:fs/promises'
+import fs from 'node:fs'
 import { CID } from 'multiformats/cid'
 import * as Block from 'multiformats/block'
 import { sha256 } from 'multiformats/hashes/sha2'
@@ -93,7 +93,6 @@ An `dag-json` encoded Advertisement (re-formated for readability):
   }
 }
 ```
-
 
 ## Extended Providers
 
