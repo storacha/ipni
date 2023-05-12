@@ -1,3 +1,4 @@
+import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { concat } from 'uint8arrays/concat'
 import { RecordEnvelope } from '@libp2p/peer-record'
@@ -16,6 +17,10 @@ import { RecordEnvelope } from '@libp2p/peer-record'
 export const AD_SIG_CODEC = new TextEncoder().encode('/indexer/ingest/adSignature')
 export const EP_SIG_CODEC = new TextEncoder().encode('/indexer/ingest/extendedProviderSignature')
 export const SIG_DOMAIN = 'indexer'
+
+// instead of making Entires optional there is a magic CID, a stubby 16 byte sha256 of empty bytes
+// https://github.com/ipni/go-libipni/blob/81286e4b32baed09e6151ce4f8e763f449b81331/ingest/schema/schema.go#L64-L69
+export const NO_ENTRIES = CID.parse('bafkreehdwdcefgh4dqkjv67uzcmw7oje')
 
 /**
  * Sign the serialized form of an Advertisement or a Provider
@@ -52,15 +57,15 @@ export class Advertisement {
   /**
    * @param {object} config
    * @param {Provider[]|Provider} config.providers
-   * @param {Link} config.entries
+   * @param {Link} [config.entries]
    * @param {Bytes} config.context
    * @param {Link | null} config.previous
    * @param {boolean} [config.remove]
    * @param {boolean} [config.override]
    */
-  constructor ({ previous, providers, entries, context, remove, override }) {
+  constructor ({ previous, providers, context, entries = NO_ENTRIES, remove = false, override = false }) {
     if (!providers || !entries || !context) {
-      throw new Error('providers, entries, and context are required')
+      throw new Error('providers and context are required')
     }
     if (previous === undefined) {
       throw new Error('previous must be set. If this is your first advertisement pass null')
@@ -69,8 +74,8 @@ export class Advertisement {
     this.providers = Array.isArray(providers) ? providers : [providers]
     this.entries = entries
     this.context = context
-    this.remove = remove || false
-    this.override = override || false
+    this.remove = remove
+    this.override = override
   }
 
   /**
@@ -87,7 +92,7 @@ export class Advertisement {
 
     /** @type {import('./schema').AdvertisementOutput} AdvertisementOutput */
     const value = {
-      Provider: provider.peerId.toCID().toString(),
+      Provider: provider.peerId.toString(),
       Addresses: provider.addresses.map(a => a.toString()),
       Signature: await sign(provider.peerId, ad.signableBytes(), AD_SIG_CODEC),
       Entries: this.entries,
@@ -103,7 +108,7 @@ export class Advertisement {
       const Providers = []
       for (const p of this.providers) {
         Providers.push({
-          ID: p.peerId.toCID().toString(),
+          ID: p.peerId.toString(),
           Addresses: p.addresses.map(a => a.toString()),
           Metadata: p.encodeMetadata(),
           Signature: await sign(p.peerId, p.signableBytes(ad), EP_SIG_CODEC)
@@ -131,7 +136,7 @@ export class Advertisement {
     return concat([
       ad.previous?.bytes ?? new Uint8Array(),
       ad.entries.bytes,
-      text.encode(provider.peerId.toCID().toString()),
+      text.encode(provider.peerId.toString()),
       text.encode(provider.addresses.map(a => a.toString()).join('')),
       provider.encodeMetadata(),
       new Uint8Array([IsRm])

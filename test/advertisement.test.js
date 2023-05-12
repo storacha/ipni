@@ -21,7 +21,7 @@ test('one provider', async t => {
   const ad = new Advertisement({ providers: [provider], entries, context, previous: null })
   const encoded = await ad.encodeAndSign()
   t.like(encoded, {
-    Provider: peerId.toCID().toString(),
+    Provider: peerId.toString(),
     Addresses: addresses,
     Entries: entries,
     ContextID: context,
@@ -85,7 +85,7 @@ test('extended providers', async t => {
   const ad = new Advertisement({ providers: [bitswap, http, graph], entries, context, previous: null })
   const encoded = await ad.encodeAndSign()
   t.like(encoded, {
-    Provider: bitswap.peerId.toCID().toString(),
+    Provider: bitswap.peerId.toString(),
     Addresses: [bitswap.addresses[0].toString()],
     Entries: entries,
     ContextID: context,
@@ -96,21 +96,39 @@ test('extended providers', async t => {
     }
   })
   t.like(encoded.ExtendedProvider?.Providers[0], {
-    ID: bitswap.peerId.toCID().toString(),
+    ID: bitswap.peerId.toString(),
     Addresses: [bitswap.addresses[0].toString()],
     Metadata: BITSWAP_PREFIX
   })
   t.like(encoded.ExtendedProvider?.Providers[1], {
-    ID: http.peerId.toCID().toString(),
+    ID: http.peerId.toString(),
     Addresses: [http.addresses[0].toString()],
     Metadata: HTTP_PREFIX
   })
   t.like(encoded.ExtendedProvider?.Providers[2], {
-    ID: graph.peerId.toCID().toString(),
+    ID: graph.peerId.toString(),
     Addresses: [graph.addresses[0].toString()]
   })
   t.deepEqual(encoded.ExtendedProvider?.Providers[2].Metadata.slice(0, GRAPHSYNC_PREFIX.byteLength), GRAPHSYNC_PREFIX)
   t.true(adValidator(encoded), 'encoded form matches IPLD schema')
+})
+
+test('extended provider interop', async t => {
+  const expected = JSON.parse(await readFile('test/fixtures/ad-3/ad.json', { encoding: 'utf-8' }))
+  const p1 = new Provider({
+    protocol: 'bitswap',
+    addresses: expected.ExtendedProvider.Providers[0].Addresses,
+    peerId: await loadPeerId('test/fixtures/ad-1/peerId.json')
+  })
+  const p2 = new Provider({
+    protocol: 'bitswap',
+    addresses: expected.ExtendedProvider.Providers[1].Addresses,
+    peerId: await loadPeerId('test/fixtures/ad-2/peerId.json')
+  })
+  const context = Buffer.from(expected.ContextID['/'].bytes, 'base64')
+  const ad = new Advertisement({ providers: [p1, p2], context, previous: null })
+  const value = await ad.encodeAndSign()
+  t.deepEqual(decode(encode(value)), decode(encode(expected)))
 })
 
 test('parity with publisher-lambda no previous', async t => {
@@ -137,7 +155,7 @@ test('parity with publisher-lambda with previous', async t => {
   const expected = JSON.parse(await readFile('test/fixtures/ad-2/ad.json', { encoding: 'utf-8' }))
   const entries = CID.parse(expected.Entries['/'])
   const context = Buffer.from(expected.ContextID['/'].bytes, 'base64')
-  const peerId = await createFromJSON(JSON.parse(await readFile('test/fixtures/ad-2/peerId.json', { encoding: 'utf-8' })))
+  const peerId = await loadPeerId('test/fixtures/ad-2/peerId.json')
   const providers = new Provider({ protocol: 'bitswap', addresses: expected.Addresses, peerId })
   const previous = CID.parse(expected.PreviousID['/'])
   const ad = new Advertisement({ previous, providers, entries, context })
@@ -148,3 +166,10 @@ test('parity with publisher-lambda with previous', async t => {
   // const adCid = CID.createV1(dagJsonCode, await sha256.digest(encode(value)))
   // t.is(adCid.toString(), 'baguqeeracy3dyhdtqxo2wqcvekr6zbdsztjw54uqezjvrnadyrfnpvwzcxta')
 })
+
+/**
+ * @param {string} path
+ */
+async function loadPeerId (path) {
+  return await createFromJSON(JSON.parse(await readFile(path, { encoding: 'utf-8' })))
+}

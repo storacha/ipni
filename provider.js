@@ -78,9 +78,9 @@ export class Provider {
     return concat([
       ad.previous?.bytes ?? new Uint8Array(),
       ad.entries.bytes,
-      text.encode(ad.providers[0].peerId.toCID().toString()),
+      text.encode(ad.providers[0].peerId.toString()),
       ad.context,
-      text.encode(this.peerId.toCID().toString()),
+      text.encode(this.peerId.toString()),
       text.encode(this.addresses.map(a => a.toString()).join('')),
       this.encodeMetadata(),
       new Uint8Array([providerOverride])
