@@ -1,6 +1,9 @@
 # ipni
 
-> Create signed advertisements for the [InterPlanetary Network Indexer](https://github.com/ipni/specs/blob/main/IPNI.md)
+Create signed Advertisement records for the [InterPlanetary Network Indexer](https://github.com/ipni/specs/blob/main/IPNI.md)
+
+> IPNI is a content routing system optimized to take billions of CIDs from large-scale data providers, and allow fast lookup of provider information using these CIDs over a simple HTTP REST API.
+> – https://github.com/ipni
 
 This library handles encoding and signing of IPNI advertisements. To share them with an indexer follow the guidance in the spec [here](https://github.com/ipni/specs/blob/main/IPNI.md#advertisement-transfer)
 
@@ -115,7 +118,10 @@ const context = new Uint8Array([99]) // custom id for a set of multihashes
 // create a provider for each peer + protocol that will provider your entries
 const bits = new Provider({ protocol: 'bitswap', addresses: ['/ip4/12.34.56.1/tcp/999/ws'], peerId: await createEd25519PeerId() })
 const http = new Provider({ protocol: 'http', addresses: ['/dns4/dag.house/tcp/443/https'], peerId: await createEd25519PeerId() })
-const graf = new Provider({ protocol: 'graphsync', addresses: ['/ip4/120.0.0.1/tcp/1234'], peerId: await createEd25519PeerId(),
+const graf = new Provider({
+  protocol: 'graphsync',
+  addresses: ['/ip4/120.0.0.1/tcp/1234'],
+  peerId: await createEd25519PeerId(),
   metadata: {
     pieceCid: CID.parse('bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354'),
     fastRetrieval: true,
@@ -135,6 +141,9 @@ const block = await Block.encode({ value, codec: dagJson, hasher: sha256 })
 // share with indexer
 fs.writeFileSync(block.cid.toString(), block.bytes)
 ```
+
+<details>
+  <summary>dag-json output</summary>
 
 ```json
 {
@@ -216,3 +225,5 @@ fs.writeFileSync(block.cid.toString(), block.bytes)
   }
 }
 ```
+
+</details>
