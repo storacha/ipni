@@ -168,17 +168,90 @@ test('parity with publisher-lambda with previous', async t => {
 })
 
 test('createExtendedProviderAd helper', async t => {
+  const message = 'at least 2 providers are required, the root provider and the new extended provider'
   const provider = new Provider({
     protocol: 'http',
     addresses: '/dns4/example.org/tcp/443/https',
     peerId: await createEd25519PeerId()
   })
   // @ts-expect-error
-  t.throws(() => createExtendedProviderAd({ previous: null }))
+  t.throws(() => createExtendedProviderAd({ previous: null }), { message })
   // @ts-expect-error
-  t.throws(() => createExtendedProviderAd({ providers: provider, previous: null }))
+  t.throws(() => createExtendedProviderAd({ providers: provider, previous: null }), { message })
 
-  t.throws(() => createExtendedProviderAd({ providers: [provider], previous: null }))
+  t.throws(() => createExtendedProviderAd({ providers: [provider], previous: null }), { message })
+
+  const ad = createExtendedProviderAd({ providers: [provider, provider], previous: null })
+  const value = await ad.encodeAndSign()
+  t.is(value.ExtendedProvider?.Providers.length, 2)
+})
+
+test('max context id length', async t => {
+  // see: https://github.com/ipni/go-libipni/blob/b6e9a9def00b2db19aa4a3bc5fc33b3b1575530e/ingest/schema/schema.go#L18-L19
+  const providers = new Provider({
+    protocol: 'http',
+    addresses: '/dns4/example.org/tcp/443/https',
+    peerId: await createEd25519PeerId()
+  })
+  t.throws(
+    () => new Advertisement({ previous: null, context: new Uint8Array(65).fill(1), providers, entries: null }),
+    { message: 'context must be less than 64 bytes' }
+  )
+  const ad = new Advertisement({ previous: null, context: new Uint8Array(64).fill(1), providers, entries: null })
+  const value = await ad.encodeAndSign()
+  t.deepEqual(value.ContextID, new Uint8Array(64).fill(1))
+})
+
+test('override', async t => {
+  // see: https://github.com/ipni/go-libipni/blob/b6e9a9def00b2db19aa4a3bc5fc33b3b1575530e/ingest/schema/schema.go#L18-L19
+  const provider = new Provider({
+    protocol: 'http',
+    addresses: '/dns4/example.org/tcp/443/https',
+    peerId: await createEd25519PeerId()
+  })
+  const providers = [provider, provider]
+  const entries = null
+  const previous = null
+  const override = true
+  t.throws(
+    () => new Advertisement({ previous, context: null, override, providers, entries }),
+    { message: 'override may only be true when a context is set and more than 1 provider' }
+  )
+
+  t.throws(
+    () => new Advertisement({ previous, context: new Uint8Array(), override, providers, entries }),
+    { message: 'override may only be true when a context is set and more than 1 provider' }
+  )
+
+  t.throws(
+    () => new Advertisement({ previous, context: new Uint8Array(1).fill(1), override, providers: provider, entries }),
+    { message: 'override may only be true when a context is set and more than 1 provider' }
+  )
+
+  const ad = new Advertisement({ previous, context: new Uint8Array(1).fill(1), override, providers, entries })
+  const value = await ad.encodeAndSign()
+  t.true(value.ExtendedProvider?.Override)
+})
+
+test('remove', async t => {
+  // see: https://github.com/ipni/go-libipni/blob/b6e9a9def00b2db19aa4a3bc5fc33b3b1575530e/ingest/schema/schema.go#L18-L19
+  const provider = new Provider({
+    protocol: 'http',
+    addresses: '/dns4/example.org/tcp/443/https',
+    peerId: await createEd25519PeerId()
+  })
+  const previous = null
+  const context = null
+  const entries = null
+  const remove = true
+  t.throws(
+    () => new Advertisement({ remove, previous, context, providers: [provider, provider], entries }),
+    { message: 'remove may only be true when there is a single provider. IsRm is not support for ExtendedProvider advertisement' }
+  )
+
+  const ad = new Advertisement({ remove, previous, context, providers: provider, entries })
+  const value = await ad.encodeAndSign()
+  t.true(value.IsRm)
 })
 
 /**

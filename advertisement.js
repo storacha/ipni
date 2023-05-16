@@ -85,9 +85,6 @@ export class Advertisement {
     if (context !== null && context.byteLength > MAX_CONTEXT_ID_LENGTH) {
       throw new Error(`context must be less than ${MAX_CONTEXT_ID_LENGTH} bytes`)
     }
-    if (override && !context) {
-      throw new Error('override may only be true when a context is set')
-    }
     this.providers = Array.isArray(providers) ? providers : [providers]
     this.previous = previous
     this.entries = entries ?? NO_ENTRIES
@@ -96,7 +93,10 @@ export class Advertisement {
     this.override = override
     if (this.remove && this.providers.length > 1) {
       // see: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L126-L127
-      throw new Error('rm ads are not supported for extended provider signatures')
+      throw new Error('remove may only be true when there is a single provider. IsRm is not support for ExtendedProvider advertisement')
+    }
+    if (this.override && (this.context.byteLength === 0 || this.providers.length < 2)) {
+      throw new Error('override may only be true when a context is set and more than 1 provider')
     }
   }
 
