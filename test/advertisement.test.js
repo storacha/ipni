@@ -5,7 +5,7 @@ import { parse as parseSchema } from 'ipld-schema'
 import { create as createValidator } from 'ipld-schema-validator'
 import { readFile } from 'fs/promises'
 import { Provider, HTTP_PREFIX, BITSWAP_PREFIX, GRAPHSYNC_PREFIX } from '../provider.js'
-import { Advertisement, hashSignableBytes } from '../advertisement.js'
+import { Advertisement, hashSignableBytes, createExtendedProviderAd } from '../advertisement.js'
 import { encode, decode } from '@ipld/dag-json'
 
 const schema = await readFile('schema.ipldsch', { encoding: 'utf8' })
@@ -126,7 +126,7 @@ test('extended provider interop', async t => {
     peerId: await loadPeerId('test/fixtures/ad-2/peerId.json')
   })
   const context = Buffer.from(expected.ContextID['/'].bytes, 'base64')
-  const ad = new Advertisement({ providers: [p1, p2], context, previous: null })
+  const ad = new Advertisement({ providers: [p1, p2], context, entries: null, previous: null })
   const value = await ad.encodeAndSign()
   t.deepEqual(decode(encode(value)), decode(encode(expected)))
 })
@@ -165,6 +165,20 @@ test('parity with publisher-lambda with previous', async t => {
 
   // const adCid = CID.createV1(dagJsonCode, await sha256.digest(encode(value)))
   // t.is(adCid.toString(), 'baguqeeracy3dyhdtqxo2wqcvekr6zbdsztjw54uqezjvrnadyrfnpvwzcxta')
+})
+
+test('createExtendedProviderAd helper', async t => {
+  const provider = new Provider({
+    protocol: 'http',
+    addresses: '/dns4/example.org/tcp/443/https',
+    peerId: await createEd25519PeerId()
+  })
+  // @ts-expect-error
+  t.throws(() => createExtendedProviderAd({ previous: null }))
+  // @ts-expect-error
+  t.throws(() => createExtendedProviderAd({ providers: provider, previous: null }))
+
+  t.throws(() => createExtendedProviderAd({ providers: [provider], previous: null }))
 })
 
 /**

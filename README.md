@@ -64,7 +64,7 @@ const block = await Block.encode({ value, codec: dagJson, hasher: sha256 })
 fs.writeFileSync(block.cid.toString(), block.bytes)
 ```
 
-An `dag-json` encoded Advertisement (re-formated for readability):
+A `dag-json` encoded Advertisement (formatted for readability):
 
 ```json
 {
@@ -96,7 +96,13 @@ An `dag-json` encoded Advertisement (re-formated for readability):
 
 ## Extended Providers
 
-Encode a signed advertisement with an Extended Providers section where the entries are available from multiple providers or different protocols. 
+Encode a signed advertisement with an Extended Providers section and no context id or entries cid to announce that **all** previous and future entries are available from multiple providers or different protocols.
+
+You only need to announce the additional providers once. Subsequent ExtendedProvider advertisements are additive. The indexer will record that your entries are available from the union of all the ExtendedProvider records.
+
+Note: it is not currently possible to remove a Provider once announced ([issue](https://github.com/ipni/storetheindex/issues/1745))
+
+You may announce a set of ExtendedProviders with a context to inform the indexer that only the subset of entries with the same context id are available from these extended providers.
 
 The first provider passed to the Advertisement constructor is used as the top level provider for older indexers that don't yet support the `ExtendedProvider` property.
 
@@ -108,11 +114,9 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import * as dagJson from '@ipld/dag-json'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 
-import { Provider, Advertisement } from '../index.js'
+import { Provider, createExtendedProviderAd } from '../index.js'
 
-const previous = null // CID for previous batch. Pass `null` for the first advertisement in your chain
-const entries = CID.parse('baguqeera4vd5tybgxaub4elwag6v7yhswhflfyopogr7r32b7dpt5mqfmmoq') // entry batch to provide
-const context = new Uint8Array([99]) // custom id for a set of multihashes
+const previous = null // CID for previous advertisement. Pass `null` for the first advertisement in your chain
 
 // create a provider for each peer + protocol that will provider your entries
 const bits = new Provider({ protocol: 'bitswap', addresses: ['/ip4/12.34.56.1/tcp/999/ws'], peerId: await createEd25519PeerId() })
@@ -128,8 +132,9 @@ const graf = new Provider({
   }
 })
 
-// an advertisement with a single multiple providers
-const advert = new Advertisement({ providers: [http, bits, graf], entries, context, previous })
+// create an ad with the extra provider info and no context or entries
+// to denote that they apply to all previous and future advertisements
+const advert = createExtendedProviderAd({ providers: [http, bits, graf], previous })
 
 // sign and export to IPLD form per schema
 const value = await advert.encodeAndSign()
@@ -141,8 +146,7 @@ const block = await Block.encode({ value, codec: dagJson, hasher: sha256 })
 fs.writeFileSync(block.cid.toString(), block.bytes)
 ```
 
-<details>
-  <summary>dag-json output</summary>
+A `dag-json` encoded Advertisement (formatted for readability):
 
 ```json
 {
@@ -151,11 +155,11 @@ fs.writeFileSync(block.cid.toString(), block.bytes)
   ],
   "ContextID": {
     "/": {
-      "bytes": "Yw"
+      "bytes": ""
     }
   },
   "Entries": {
-    "/": "baguqeera4vd5tybgxaub4elwag6v7yhswhflfyopogr7r32b7dpt5mqfmmoq"
+    "/": "bafkreehdwdcefgh4dqkjv67uzcmw7oje"
   },
   "ExtendedProvider": {
     "Override": false,
@@ -164,7 +168,7 @@ fs.writeFileSync(block.cid.toString(), block.bytes)
         "Addresses": [
           "/dns4/dag.house/tcp/443/https"
         ],
-        "ID": "12D3KooWPPwQ99nqqBJhAYZnvicHDfx7o855fUzBVBVgBQ4PotMU",
+        "ID": "12D3KooWQWY5d9xp8on1cizKBdbscfKo1qcyovk7KwV9kKKXWpwK",
         "Metadata": {
           "/": {
             "bytes": "gID0AQ"
@@ -172,7 +176,7 @@ fs.writeFileSync(block.cid.toString(), block.bytes)
         },
         "Signature": {
           "/": {
-            "bytes": "CiQIARIgycGrz1Pkp8va7HhAM0+MHumsG5MxgcpUJOeSBeyH1f8SKS9pbmRleGVyL2luZ2VzdC9leHRlbmRlZFByb3ZpZGVyU2lnbmF0dXJlGiISIBNXY+VA96CrdsbGe54bA7TGHgfB9z05ZzVApWVzdMOWKkD1sZAZVMkYAkugiqlDpiU1o1KkYCcmyA+ozWNOMgfvk7g3eDyIGP1oIHBUQuOcIYd0RB0VdV5/Kl1uV8KQKysJ"
+            "bytes": "CiQIARIg2k4OefnZgOzUQo0VQE5Yg9KubOpw3gTWHeQprfuidZISKS9pbmRleGVyL2luZ2VzdC9leHRlbmRlZFByb3ZpZGVyU2lnbmF0dXJlGiISIOrC3ZauKlzBVU7HWLR3VjlW79cf9D7xMKMcbqBXA1bQKkB1rdZLHfzTDpfZZ2IH6HJHsGSkaKbmRD+QSIIb0z73sKoSMutXeuJiK2cJ54PL6m2hPCWJyV9fBcuYMKDAXVwA"
           }
         }
       },
@@ -180,7 +184,7 @@ fs.writeFileSync(block.cid.toString(), block.bytes)
         "Addresses": [
           "/ip4/12.34.56.1/tcp/999/ws"
         ],
-        "ID": "12D3KooWLcR73mkaEfNy9i9nDq3NBqFZwBvnvZqVo1MUV6BAvfMB",
+        "ID": "12D3KooWJn37snQzNk3BTBgzGFJpxg7er8CLofq2789PqaPzPF1g",
         "Metadata": {
           "/": {
             "bytes": "gBI"
@@ -188,7 +192,7 @@ fs.writeFileSync(block.cid.toString(), block.bytes)
         },
         "Signature": {
           "/": {
-            "bytes": "CiQIARIgoGDoEx0useLQEWElUSa7imb/59IygDSjK5qRKlRcSEISKS9pbmRleGVyL2luZ2VzdC9leHRlbmRlZFByb3ZpZGVyU2lnbmF0dXJlGiISIPP+xTvUwEfL4LrCnL+Pj79ARZ0bl6hBYpzZ4aFN48wFKkDI0GIqaUqQxaEgcE7WBVH+wdc6Ppp4WgKekTAV9RpniR7zprFobQdkHuFmnaepeSbOIBwyrL1ENGRbCxC94ykF"
+            "bytes": "CiQIARIghSB7P4RGuK3xYFMW/Z5fKNvzMqDb424fhxkTRfde5B8SKS9pbmRleGVyL2luZ2VzdC9leHRlbmRlZFByb3ZpZGVyU2lnbmF0dXJlGiISIBV1UXktJsOIfiXLGueJmvbpMYOXwdk8tMzRWOBSb4VIKkCzt7tvBMp/mjM4P2A3qU5XfvWF0/7M2cBoNLCM24jVu1roj5yyj1NA/xLA+ap97YY79EPx7eQWEnMxF15wr2EL"
           }
         }
       },
@@ -196,7 +200,7 @@ fs.writeFileSync(block.cid.toString(), block.bytes)
         "Addresses": [
           "/ip4/120.0.0.1/tcp/1234"
         ],
-        "ID": "12D3KooWShFBk7jQLFYAPrzeHmdL5nYgrrEfiyJFUJfhguCPUJq3",
+        "ID": "12D3KooWG8RfSPYd5RgUFsAdJL1HnAvGMsce7CLJ1hcQTQa7cVAQ",
         "Metadata": {
           "/": {
             "bytes": "kBKjaFBpZWNlQ0lE2CpYJQABcBIgWZSEOQZfKWGe9BKAy7kyvlLFbZnFlmtl4BESOfCYu+9sVmVyaWZpZWREZWFs9W1GYXN0UmV0cmlldmFs9Q"
@@ -204,7 +208,7 @@ fs.writeFileSync(block.cid.toString(), block.bytes)
         },
         "Signature": {
           "/": {
-            "bytes": "CiQIARIg+sO3dlJXJxqd/6oCcmOR3ZvhHQIfoqtoxnDx6n/amD4SKS9pbmRleGVyL2luZ2VzdC9leHRlbmRlZFByb3ZpZGVyU2lnbmF0dXJlGiISIAuLbadWtTs8Bhx1s/w1/BHsrAfwNMy1Y88O1LrrxtehKkA6OjXq4rgD07uZoHzZw4Sd4cGbgdIXBO1vB1Pag5FqcuhP4R3Hi0O9QpoPdzxlXDKHYYVS+vrNUzLGiT8/STgL"
+            "bytes": "CiQIARIgXcaHEiXQHTgt2OE9I4oWwNv7gtbqWMCI03gSEh1O00kSKS9pbmRleGVyL2luZ2VzdC9leHRlbmRlZFByb3ZpZGVyU2lnbmF0dXJlGiISIGyVi9n2pbJhuoXyE4k+SzPKpL0eb2nENXNUWaN0i/eLKkBluzmx84WCkzLkFo+XtYzpuqR5t8aJXf8Y55XoNhSPT79UAvwSMWLbKy2C9GXORQb5hCHye1cOaT11zisssKMA"
           }
         }
       }
@@ -216,10 +220,10 @@ fs.writeFileSync(block.cid.toString(), block.bytes)
       "bytes": "gID0AQ"
     }
   },
-  "Provider": "12D3KooWPPwQ99nqqBJhAYZnvicHDfx7o855fUzBVBVgBQ4PotMU",
+  "Provider": "12D3KooWQWY5d9xp8on1cizKBdbscfKo1qcyovk7KwV9kKKXWpwK",
   "Signature": {
     "/": {
-      "bytes": "CiQIARIgycGrz1Pkp8va7HhAM0+MHumsG5MxgcpUJOeSBeyH1f8SGy9pbmRleGVyL2luZ2VzdC9hZFNpZ25hdHVyZRoiEiDoF5DFOpj4mxco1sWVnC6KEsjfd3yz9i47SS4NJAhSNCpAsn5C2HUI1K5/FtXZ8+Xcr6V4AGxstCMIudf6B3H3bGw3OcCfDOS01MgNyArtp9dW2XobykWhan7r2g/3VRYQDw"
+      "bytes": "CiQIARIg2k4OefnZgOzUQo0VQE5Yg9KubOpw3gTWHeQprfuidZISGy9pbmRleGVyL2luZ2VzdC9hZFNpZ25hdHVyZRoiEiARPrSzHMsp4L/L9zSmNQz2ooRAEznsM76n+BfkIewNlipA5Q3UW14STPAyTotfP7pHGseL1Yi8Bh5hf+X0yuYAAsIsRpnYQJKrAcWxQS+oGwQLa4pJ+NXCiro6M98Ey2SlBQ"
     }
   }
 }

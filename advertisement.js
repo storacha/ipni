@@ -18,9 +18,15 @@ export const AD_SIG_CODEC = new TextEncoder().encode('/indexer/ingest/adSignatur
 export const EP_SIG_CODEC = new TextEncoder().encode('/indexer/ingest/extendedProviderSignature')
 export const SIG_DOMAIN = 'indexer'
 
-// instead of making Entires optional there is a magic CID, a stubby 16 byte sha256 of empty bytes
+// instead of making Entries optional there is a magic CID, a stubby 16 byte sha256 of empty bytes
 // https://github.com/ipni/go-libipni/blob/81286e4b32baed09e6151ce4f8e763f449b81331/ingest/schema/schema.go#L64-L69
 export const NO_ENTRIES = CID.parse('bafkreehdwdcefgh4dqkjv67uzcmw7oje')
+
+// an empty byte array signifies no context should be applied
+export const NO_CONTEXT = new Uint8Array()
+
+// maximum number of bytes accepted as Advertisement.ContextID.
+export const MAX_CONTEXT_ID_LENGTH = 64
 
 /**
  * Sign the serialized form of an Advertisement or a Provider
@@ -56,26 +62,42 @@ export async function hashSignableBytes (bytes) {
 export class Advertisement {
   /**
    * @param {object} config
-   * @param {Provider[]|Provider} config.providers
-   * @param {Link} [config.entries]
-   * @param {Bytes} config.context
-   * @param {Link | null} config.previous
-   * @param {boolean} [config.remove]
-   * @param {boolean} [config.override]
+   * @param {Link | null} config.previous - CID of previous Advertisement
+   * @param {Provider[]|Provider} config.providers - Array of Provider info where entries are available
+   * @param {Link | null} config.entries - CID for an EntryBatch, an array of content multihashes you're providing
+   * @param {Bytes | null} config.context - A custom id used to group subsets of advertisements
+   * @param {boolean} [config.remove] - true if this represents entries that are no longer retrievable.
+   * @param {boolean} [config.override] -
    */
-  constructor ({ previous, providers, context, entries = NO_ENTRIES, remove = false, override = false }) {
-    if (!providers || !context) {
-      throw new Error('providers and context are required')
+  constructor ({ previous, providers, context, entries, remove = false, override = false }) {
+    if (!providers) {
+      throw new Error('providers are required')
+    }
+    if (entries === undefined) {
+      throw new Error('entries must be set. To specify no entries pass null')
+    }
+    if (context === undefined) {
+      throw new Error('context must be set. To specify no context pass null')
     }
     if (previous === undefined) {
       throw new Error('previous must be set. If this is your first advertisement pass null')
     }
-    this.previous = previous
+    if (context !== null && context.byteLength > MAX_CONTEXT_ID_LENGTH) {
+      throw new Error(`context must be less than ${MAX_CONTEXT_ID_LENGTH} bytes`)
+    }
+    if (override && !context) {
+      throw new Error('override may only be true when a context is set')
+    }
     this.providers = Array.isArray(providers) ? providers : [providers]
-    this.entries = entries
-    this.context = context
+    this.previous = previous
+    this.entries = entries ?? NO_ENTRIES
+    this.context = context ?? NO_CONTEXT
     this.remove = remove
     this.override = override
+    if (this.remove && this.providers.length > 1) {
+      // see: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L126-L127
+      throw new Error('rm ads are not supported for extended provider signatures')
+    }
   }
 
   /**
@@ -84,11 +106,6 @@ export class Advertisement {
   async encodeAndSign () {
     const ad = this
     const provider = ad.providers[0]
-
-    if (ad.remove && ad.providers.length > 1) {
-      // see: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L126-L127
-      throw new Error('rm ads are not supported for extended provider signatures')
-    }
 
     /** @type {import('./schema').AdvertisementOutput} AdvertisementOutput */
     const value = {
@@ -141,4 +158,27 @@ export class Advertisement {
       new Uint8Array([IsRm])
     ])
   }
+}
+
+/**
+ * Advertise that **all** past and future entries in this chain are now
+ * available from a new, additional provider by specifying the root provider
+ * and the additional providers along with no context id and no entries cid.
+ *
+ * To advertise that subset of entries are available from additional providers
+ * specify the relevant context id to identify that group.
+ *
+ * Note: it is not yet possible to unannounce an extended provider once announced.
+ * see: https://github.com/ipni/storetheindex/issues/1745
+ *
+ * @param {object} config
+ * @param {Provider[]} config.providers
+ * @param {Link | null} config.previous
+ * @param {Bytes | null} [config.context]
+ */
+export function createExtendedProviderAd ({ previous, providers, context = null }) {
+  if (!providers || !Array.isArray(providers) || providers.length < 2) {
+    throw new Error('at least 2 providers are required, the root provider and the new extended provider')
+  }
+  return new Advertisement({ previous, providers, entries: null, context })
 }
