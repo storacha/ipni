@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/web3-storage/ipni/compare/v1.0.1...v1.1.0) (2023-05-17)
+
+
+### Features
+
+* createExtendedProviderAd helper to guide extended provider usage ([#8](https://github.com/web3-storage/ipni/issues/8)) ([2f18e6c](https://github.com/web3-storage/ipni/commit/2f18e6cbe026b006202dab6078504046c467e470))
+
 ## [1.0.1](https://github.com/web3-storage/ipni/compare/v1.0.0...v1.0.1) (2023-05-12)
 
 
