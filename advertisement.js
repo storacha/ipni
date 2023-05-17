@@ -67,7 +67,7 @@ export class Advertisement {
    * @param {Link | null} config.entries - CID for an EntryBatch, an array of content multihashes you're providing
    * @param {Bytes | null} config.context - A custom id used to group subsets of advertisements
    * @param {boolean} [config.remove] - true if this represents entries that are no longer retrievable.
-   * @param {boolean} [config.override] -
+   * @param {boolean} [config.override] - true if the extended providers specified should be used instead of any previously announced without a context.
    */
   constructor ({ previous, providers, context, entries, remove = false, override = false }) {
     if (!providers) {
@@ -93,7 +93,7 @@ export class Advertisement {
     this.override = override
     if (this.remove && this.providers.length > 1) {
       // see: https://github.com/ipni/go-libipni/blob/afe2d8ea45b86c2a22f756ee521741c8f99675e5/ingest/schema/envelope.go#L126-L127
-      throw new Error('remove may only be true when there is a single provider. IsRm is not support for ExtendedProvider advertisement')
+      throw new Error('remove may only be true when there is a single provider. IsRm is not supported for ExtendedProvider advertisements')
     }
     if (this.override && (this.context.byteLength === 0 || this.providers.length < 2)) {
       throw new Error('override may only be true when a context is set and more than 1 provider')
@@ -172,13 +172,14 @@ export class Advertisement {
  * see: https://github.com/ipni/storetheindex/issues/1745
  *
  * @param {object} config
- * @param {Provider[]} config.providers
- * @param {Link | null} config.previous
- * @param {Bytes | null} [config.context]
+ * @param {Link | null} config.previous - CID of previous Advertisement
+ * @param {Provider[]} config.providers - Two or more Provider objects where entries are available
+ * @param {Bytes | null} [config.context] - A custom id used to group subsets of advertisements
+ * @param {boolean} [config.override] - true if the providers should be used instead of any previously announced without a context.
  */
-export function createExtendedProviderAd ({ previous, providers, context = null }) {
+export function createExtendedProviderAd ({ previous, providers, context = null, override = false }) {
   if (!providers || !Array.isArray(providers) || providers.length < 2) {
     throw new Error('at least 2 providers are required, the root provider and the new extended provider')
   }
-  return new Advertisement({ previous, providers, entries: null, context })
+  return new Advertisement({ previous, providers, entries: null, context, override })
 }

@@ -246,7 +246,7 @@ test('remove', async t => {
   const remove = true
   t.throws(
     () => new Advertisement({ remove, previous, context, providers: [provider, provider], entries }),
-    { message: 'remove may only be true when there is a single provider. IsRm is not support for ExtendedProvider advertisement' }
+    { message: 'remove may only be true when there is a single provider. IsRm is not supported for ExtendedProvider advertisements' }
   )
 
   const ad = new Advertisement({ remove, previous, context, providers: provider, entries })
