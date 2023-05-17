@@ -5,11 +5,9 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import * as dagJson from '@ipld/dag-json'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 
-import { Provider, Advertisement } from '../index.js'
+import { Provider, createExtendedProviderAd } from '../index.js'
 
-const previous = null // CID for previous batch. Pass `null` for the first advertisement in your chain
-const entries = CID.parse('baguqeera4vd5tybgxaub4elwag6v7yhswhflfyopogr7r32b7dpt5mqfmmoq') // entry batch to provide
-const context = new Uint8Array([99]) // custom id for a set of multihashes
+const previous = null // CID for previous advertisement. Pass `null` for the first advertisement in your chain
 
 // create a provider for each peer + protocol that will provider your entries
 const bits = new Provider({ protocol: 'bitswap', addresses: ['/ip4/12.34.56.1/tcp/999/ws'], peerId: await createEd25519PeerId() })
@@ -25,8 +23,9 @@ const graf = new Provider({
   }
 })
 
-// an advertisement with a single multiple providers
-const advert = new Advertisement({ providers: [http, bits, graf], entries, context, previous })
+// create an ad with the extra provider info and no context or entries
+// to denote that they apply to all previous and future advertisements
+const advert = createExtendedProviderAd({ providers: [http, bits, graf], previous })
 
 // sign and export to IPLD form per schema
 const value = await advert.encodeAndSign()
