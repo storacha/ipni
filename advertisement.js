@@ -112,18 +112,18 @@ export class Advertisement {
       Provider: provider.peerId.toString(),
       Addresses: provider.addresses.map(a => a.toString()),
       Signature: await sign(provider.peerId, ad.signableBytes(), AD_SIG_CODEC),
-      Entries: this.entries,
-      ContextID: this.context,
+      Entries: ad.entries,
+      ContextID: ad.context,
       Metadata: provider.encodeMetadata(),
-      IsRm: this.remove
+      IsRm: ad.remove
     }
-    if (this.previous) {
-      value.PreviousID = this.previous
+    if (ad.previous) {
+      value.PreviousID = ad.previous
     }
     // ExtendedProvider mode!
-    if (this.providers.length > 1) {
+    if (ad.providers.length > 1) {
       const Providers = []
-      for (const p of this.providers) {
+      for (const p of ad.providers) {
         Providers.push({
           ID: p.peerId.toString(),
           Addresses: p.addresses.map(a => a.toString()),
@@ -133,7 +133,7 @@ export class Advertisement {
       }
       value.ExtendedProvider = {
         Providers,
-        Override: this.override
+        Override: ad.override
       }
     }
     return value

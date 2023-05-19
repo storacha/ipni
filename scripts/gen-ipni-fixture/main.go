@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"os"
 
+	"github.com/ipfs/go-cid"
 	"github.com/ipld/go-ipld-prime/codec/dagjson"
 	"github.com/ipni/index-provider/engine/xproviders"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -34,9 +35,15 @@ func main() {
 		panic(err)
 	}
 
+	previous, err := cid.Parse("baguqeera7izo6lfcvowkpqg2jjuo2hgglxy5bfbtwla7i4if6zxuhhe3yu4q")
+	if err != nil {
+		panic(err)
+	}
+
 	addrs := []multiaddr.Multiaddr{mustParseMultiaddr(provider.Addrs[0])}
 
 	advert, err := xproviders.NewAdBuilder(mustDecodePeerID(provider.ID), provider.Priv, addrs).
+		WithLastAdID(previous).
 		WithContextID(contextID).
 		WithMetadata(provider.Metadata).
 		WithOverride(false).

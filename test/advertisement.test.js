@@ -131,6 +131,25 @@ test('extended provider interop', async t => {
   t.deepEqual(decode(encode(value)), decode(encode(expected)))
 })
 
+test('extended provider interop with previous', async t => {
+  const expected = JSON.parse(await readFile('test/fixtures/ad-4/ad.json', { encoding: 'utf-8' }))
+  const previous = CID.parse(expected.PreviousID['/'])
+  const p1 = new Provider({
+    protocol: 'bitswap',
+    addresses: expected.ExtendedProvider?.Providers[0].Addresses,
+    peerId: await loadPeerId('test/fixtures/ad-1/peerId.json')
+  })
+  const p2 = new Provider({
+    protocol: 'bitswap',
+    addresses: expected.ExtendedProvider?.Providers[1].Addresses,
+    peerId: await loadPeerId('test/fixtures/ad-2/peerId.json')
+  })
+  const context = Buffer.from(expected.ContextID['/'].bytes, 'base64')
+  const ad = new Advertisement({ providers: [p1, p2], context, entries: null, previous })
+  const value = await ad.encodeAndSign()
+  t.deepEqual(decode(encode(value)), decode(encode(expected)))
+})
+
 test('parity with publisher-lambda no previous', async t => {
   const expected = JSON.parse(await readFile('test/fixtures/ad-1/ad.json', { encoding: 'utf-8' }))
   const entries = CID.parse(expected.Entries['/'])
