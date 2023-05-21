@@ -17,7 +17,7 @@ import varint from 'varint'
 // see: https://github.com/ipni/specs/blob/main/IPNI.md#metadata
 export const GRAPHSYNC_PREFIX = new Uint8Array(varint.encode(0x0910))
 export const BITSWAP_PREFIX = new Uint8Array(varint.encode(0x900))
-export const HTTP_PREFIX = new Uint8Array(varint.encode(0x3D0000))
+export const HTTP_PREFIX = new Uint8Array(varint.encode(0x0920))
 
 /**
  * Define where and how your entries can be fetched.
