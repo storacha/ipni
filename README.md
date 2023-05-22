@@ -35,7 +35,7 @@ The `protocol` string should be one of
 - `graphsync` for _Filecoin graphsync datatransfer_ ([`0x0910`])
 - `http` for _HTTP IPFS Gateway trustless datatransfer_ ([`0x0920`])
 
-The `addresses` should be an array of `multiaddrs` that are providing the entries e.g. [`/dns4/dag.house/tcp/443/https`]
+The `addresses` should be an array of `multiaddrs` that are providing the entries e.g. `['/dns4/dag.house/tcp/443/https']`
 
 You will need a mechanism for fetching the peerId and signing keys for your providers, e.g `createFromJSON` from [`@libp2p/peer-id-factory`](https://github.com/libp2p/js-libp2p-peer-id/tree/master/packages/libp2p-peer-id-factory#readme)
 
