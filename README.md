@@ -25,9 +25,21 @@ npm i @web3-storage/ipni
 
 ## Single provider
 
-Encode an signed advertisement for a new batch of entries available from a single provider. You will need a mechanism for fetching the peerId and signing keys for your providers, e.g `createFromJSON` from [`@libp2p/peer-id-factory`](https://github.com/libp2p/js-libp2p-peer-id/tree/master/packages/libp2p-peer-id-factory#readme)
+Encode an signed advertisement for a new batch of entries available from a single provider. 
 
-Construct A Provider with the peerID and signing keys, and pass it to an Advertisement along with the entries CID, a context ID, and a CID for the previous batch of entries or `null` if this is the first advertisement in your chain.
+Construct A Provider with a protocol, an array of addresses, and the peerID with signing keys.
+
+The `protocol` string should be one of
+
+- `bitswap` for _Bitswap datatransfer_ ([`0x0900`])
+- `graphsync` for _Filecoin graphsync datatransfer_ ([`0x0910`])
+- `http` for _HTTP IPFS Gateway trustless datatransfer_ ([`0x0920`])
+
+The `addresses` should be an array of `multiaddrs` that are providing the entries e.g. [`/dns4/dag.house/tcp/443/https`]
+
+You will need a mechanism for fetching the peerId and signing keys for your providers, e.g `createFromJSON` from [`@libp2p/peer-id-factory`](https://github.com/libp2p/js-libp2p-peer-id/tree/master/packages/libp2p-peer-id-factory#readme)
+
+Pass the provider to an Advertisement along with the entries CID, a context ID, and a CID for the previous batch of entries or `null` if this is the first advertisement in your chain.
 
 Call `advertisement.signAndEncode()` to export a valid Advertisement ready for encoding as IPLD.
 
@@ -230,3 +242,7 @@ A `dag-json` encoded Advertisement (formatted for readability):
 ```
 
 </details>
+
+[`0x0900`]: https://github.com/multiformats/multicodec/blob/df81972d764f30da4ad32e1e5b778d8b619de477/table.csv?plain=1#L145
+[`0x0910`]: https://github.com/multiformats/multicodec/blob/df81972d764f30da4ad32e1e5b778d8b619de477/table.csv?plain=1#L146
+[`0x0920`]: https://github.com/multiformats/multicodec/blob/df81972d764f30da4ad32e1e5b778d8b619de477/table.csv?plain=1#L147
