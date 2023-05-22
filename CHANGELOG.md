@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.0](https://github.com/web3-storage/ipni/compare/v1.1.0...v2.0.0) (2023-05-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* release updated metadata codec for http
+
+### Bug Fixes
+
+* add test for previous encoding interop with go ([#10](https://github.com/web3-storage/ipni/issues/10)) ([7598ebb](https://github.com/web3-storage/ipni/commit/7598ebb11bee7d63251fca4ada511cf986a3cc1a))
+* release updated metadata codec for http ([c8932d1](https://github.com/web3-storage/ipni/commit/c8932d1e3708ded15780da44ce90013dc10c161f))
+
 ## [1.1.0](https://github.com/web3-storage/ipni/compare/v1.0.1...v1.1.0) (2023-05-17)
 
 
