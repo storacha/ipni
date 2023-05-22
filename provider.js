@@ -64,7 +64,7 @@ export class Provider {
   * @param {GraphsyncMetadata} [metadata] - required if protocol is `graphsync`
   */
   encodeMetadata (protocol = this.protocol, metadata = this.metadata) {
-    if (protocol === 'http') return HTTP_PREFIX
+    if (protocol === 'http') return concat([HTTP_PREFIX, new Uint8Array(varint.encode(0))])
     if (protocol === 'bitswap') return BITSWAP_PREFIX
     if (protocol === 'graphsync') {
       if (!metadata) throw new Error('metadata is required')

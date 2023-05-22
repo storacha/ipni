@@ -3,6 +3,8 @@ import { CID } from 'multiformats/cid'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { Provider, HTTP_PREFIX, BITSWAP_PREFIX, GRAPHSYNC_PREFIX } from '../provider.js'
 import { Advertisement } from '../advertisement.js'
+import varint from 'varint'
+import { concat } from 'uint8arrays/concat'
 
 test('http', async t => {
   const peerId = await createEd25519PeerId()
@@ -10,7 +12,7 @@ test('http', async t => {
   const hp = new Provider({ protocol: 'http', peerId, addresses })
 
   const meta = hp.encodeMetadata()
-  t.deepEqual(meta, HTTP_PREFIX)
+  t.deepEqual(meta, concat([HTTP_PREFIX, new Uint8Array(varint.encode(0))]))
 
   const entries = CID.parse('bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354')
   const context = new Uint8Array([99])
