@@ -17,7 +17,7 @@ import varint from 'varint'
 
 /**
  * transport-bitswap
- * @see https://github.com/multiformats/multicodec/blob/df81972d764f30da4ad32e1e5b778d8b619de477/table.csv?plain=1#LL145
+ * @see https://github.com/multiformats/multicodec/blob/df81972d764f30da4ad32e1e5b778d8b619de477/table.csv?plain=1#L145
  */
 export const BITSWAP_PREFIX = new Uint8Array(varint.encode(0x900))
 
