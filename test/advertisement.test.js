@@ -7,6 +7,8 @@ import { readFile } from 'fs/promises'
 import { Provider, HTTP_PREFIX, BITSWAP_PREFIX, GRAPHSYNC_PREFIX } from '../provider.js'
 import { Advertisement, hashSignableBytes, createExtendedProviderAd } from '../advertisement.js'
 import { encode, decode } from '@ipld/dag-json'
+import varint from 'varint'
+import { concat } from 'uint8arrays/concat'
 
 const schema = await readFile('schema.ipldsch', { encoding: 'utf8' })
 const adValidator = createValidator(parseSchema(schema), 'Advertisement')
@@ -25,7 +27,7 @@ test('one provider', async t => {
     Addresses: addresses,
     Entries: entries,
     ContextID: context,
-    Metadata: HTTP_PREFIX,
+    Metadata: concat([HTTP_PREFIX, new Uint8Array(varint.encode(0))]),
     IsRm: false
   })
   t.falsy(encoded.PreviousID, 'previous is not set')
@@ -103,7 +105,7 @@ test('extended providers', async t => {
   t.like(encoded.ExtendedProvider?.Providers[1], {
     ID: http.peerId.toString(),
     Addresses: [http.addresses[0].toString()],
-    Metadata: HTTP_PREFIX
+    Metadata: concat([HTTP_PREFIX, new Uint8Array(varint.encode(0))])
   })
   t.like(encoded.ExtendedProvider?.Providers[2], {
     ID: graph.peerId.toString(),
