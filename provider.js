@@ -29,7 +29,8 @@ export const GRAPHSYNC_PREFIX = new Uint8Array(varint.encode(0x0910))
 
 /**
  * transport-ipfs-gateway-http
- * @see https://github.com/multiformats/multicodec/blob/df81972d764f30da4ad32e1e5b778d8b619de477/table.csv?plain=1#L147 */
+ * @see https://github.com/multiformats/multicodec/blob/df81972d764f30da4ad32e1e5b778d8b619de477/table.csv?plain=1#L147
+ */
 export const HTTP_PREFIX = new Uint8Array(varint.encode(0x0920))
 
 /**
