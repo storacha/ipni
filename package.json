@@ -9,7 +9,7 @@
     "prepare": "tsc",
     "pretest": "standard && tsc",
     "test": "ava",
-    "link": "standard",
+    "lint": "standard",
     "tsc": "tsc"
   },
   "dependencies": {

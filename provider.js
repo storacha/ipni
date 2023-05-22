@@ -14,7 +14,6 @@ import varint from 'varint'
  * @prop {boolean} fastRetrieval
  */
 
-
 /**
  * transport-bitswap
  * @see https://github.com/multiformats/multicodec/blob/df81972d764f30da4ad32e1e5b778d8b619de477/table.csv?plain=1#L145
