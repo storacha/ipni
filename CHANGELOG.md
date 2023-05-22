@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/web3-storage/ipni/compare/v2.0.0...v3.0.0) (2023-05-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* add a varint 0 for http to match go-libipni ([#15](https://github.com/web3-storage/ipni/issues/15))
+
+### Bug Fixes
+
+* add a varint 0 for http to match go-libipni ([#15](https://github.com/web3-storage/ipni/issues/15)) ([dc59973](https://github.com/web3-storage/ipni/commit/dc599734e8bf486801f4577e54ccf46bcb06b7dd))
+
 ## [2.0.0](https://github.com/web3-storage/ipni/compare/v1.1.0...v2.0.0) (2023-05-22)
 
 
