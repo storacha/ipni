@@ -76,18 +76,24 @@ export class Advertisement {
     if (entries === undefined) {
       throw new Error('entries must be set. To specify no entries pass null')
     }
+    if (entries !== null && CID.asCID(entries) === null) {
+      throw new Error('entries must be an instance of CID')
+    }
     if (context === undefined) {
       throw new Error('context must be set. To specify no context pass null')
     }
     if (previous === undefined) {
       throw new Error('previous must be set. If this is your first advertisement pass null')
     }
+    if (previous !== null && CID.asCID(previous) === null) {
+      throw new Error('previous must be an instance of CID')
+    }
     if (context !== null && context.byteLength > MAX_CONTEXT_ID_LENGTH) {
       throw new Error(`context must be less than ${MAX_CONTEXT_ID_LENGTH} bytes`)
     }
     this.providers = Array.isArray(providers) ? providers : [providers]
-    this.previous = previous
-    this.entries = entries ?? NO_ENTRIES
+    this.previous = CID.asCID(previous)
+    this.entries = CID.asCID(entries) ?? NO_ENTRIES
     this.context = context ?? NO_CONTEXT
     this.remove = remove
     this.override = override

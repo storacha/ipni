@@ -28,3 +28,5 @@ const value = await advert.encodeAndSign()
 const block = await Block.encode({ value, codec: dagJson, hasher: sha256 })
 
 fs.writeFileSync(block.cid.toString(), block.bytes)
+
+console.log(`wrote ${block.cid.toString()}`)

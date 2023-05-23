@@ -63,9 +63,42 @@ test('previous', async t => {
     { message: 'previous must be set. If this is your first advertisement pass null' }
   )
 
+  t.throws(
+    // @ts-expect-error testing that passing not a cid throws
+    () => new Advertisement({ providers: [provider], entries, context, previous: { '/': 'baguqeerac3sm46p47bkdubg7tv7spipp2pmwj4og44evcp766wwffwnhhtsa' } }),
+    { message: 'previous must be an instance of CID' }
+  )
+
   const ad = new Advertisement({ providers: [provider], entries, context, previous })
   const encoded = await ad.encodeAndSign()
   t.is(encoded.PreviousID?.toString(), previous.toString(), 'previous is set')
+  t.true(adValidator(encoded), 'encoded form matches IPLD schema')
+})
+
+test('entries', async t => {
+  const previous = null
+  const peerId = await createEd25519PeerId()
+  const addresses = ['/dns4/example.org/tcp/443/https']
+  const protocol = 'http'
+  const context = new Uint8Array([99])
+  const provider = new Provider({ peerId, addresses, protocol })
+
+  t.throws(
+    // @ts-expect-error testing that forgetting to set entires is an error
+    () => new Advertisement({ providers: [provider], previous, context }),
+    { message: 'entries must be set. To specify no entries pass null' }
+  )
+
+  t.throws(
+    // @ts-expect-error testing that passing not a cid throws
+    () => new Advertisement({ providers: [provider], context, previous, entries: { '/': 'baguqeerac3sm46p47bkdubg7tv7spipp2pmwj4og44evcp766wwffwnhhtsa' } }),
+    { message: 'entries must be an instance of CID' }
+  )
+
+  const entries = CID.parse('bafybeiczsscdsbs7ffqz55asqdf3smv6klcw3gofszvwlyarci47bgf354')
+  const ad = new Advertisement({ providers: [provider], context, previous, entries })
+  const encoded = await ad.encodeAndSign()
+  t.is(encoded.Entries.toString(), entries.toString(), 'entries is set')
   t.true(adValidator(encoded), 'encoded form matches IPLD schema')
 })
 
