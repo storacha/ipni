@@ -5,7 +5,7 @@ Create signed Advertisement records for the [InterPlanetary Network Indexer](htt
 > IPNI is a content routing system optimized to take billions of CIDs from large-scale data providers, and allow fast lookup of provider information using these CIDs over a simple HTTP REST API.
 > – https://github.com/ipni
 
-This library handles encoding and signing of IPNI advertisements. To share them with an indexer follow the guidance in the spec [here](https://github.com/ipni/specs/blob/main/IPNI.md#advertisement-transfer)
+This library handles encoding and signing of IPNI EntryChunk and Advertisement objects. To share them with an indexer follow the guidance in the spec [here](https://github.com/ipni/specs/blob/main/IPNI.md#advertisement-transfer)
 
 Supports single and [extended providers](https://github.com/ipni/specs/blob/main/IPNI.md#extendedprovider) by separating Provider and Advertisement creation. 
 
@@ -23,7 +23,56 @@ Use `node` > 18. Install as dependency from `npm`.
 npm i @web3-storage/ipni
 ```
 
-## Single provider
+## `EntryChunk`
+
+Encode an IPNI `EntryChunk` as a dag-cbor block from 1 or more multihashes.
+
+```js
+import { EntryChunk } from '@web3-storage/ipni'
+import { sha256 } from 'multiformats/hashes/sha2'
+
+const hash = await sha256.encode(new Uint8Array())
+const chunk = EntryChunk.fromMultihashes([hash])
+const block = await chunk.export()
+
+// the EntryChunk CID should be passed to an Advertisement as the `entries` Link.
+console.log(`entries cid ${block.cid}`)
+```
+
+Encode a chain of EntryChunks, from a CARv2 Index. Write each encoded to a bucket or block-store. 
+
+Use `calculateEncodedSize()` to determine when to split the input into additional chunks.
+
+Chain EntryChunks together as a CID linked list via the `next` parameter.
+
+
+```js
+import fs from 'node:fs'
+import { Readable } from 'node:stream'
+import { MultihashIndexSortedReader } from 'cardex'
+const PREFERRED_BLOCK_SIZE = (1024 ** 2) * 1 // 1MiB
+
+const carIndexReader = MultihashIndexSortedReader.createReader({ 
+  reader: Readable.toWeb(fs.createReadStream(`car.idx`)).getReader() 
+})
+
+let entryChunk = new EntryChunk()
+while (true) {
+  const { done, value } = await carIndexReader.read()
+  if (done) break
+  entryChunk.add(value.multihash.bytes)
+  if (entryChunk.calculateEncodedSize() >= PREFERRED_BLOCK_SIZE) {
+    const block = await entryChunk.export()
+    writeEntryChunk(block) // put to bucket
+    entryChunk = new EntryChunk({ next: block.cid })
+  }
+}
+const block = await entryChunk.export()
+writeEntryChunk(block)
+writeAdvert({entries: block.cid })
+```
+
+## `Advertisement`
 
 Encode an signed advertisement for a new batch of entries available from a single provider. 
 
@@ -106,7 +155,7 @@ A `dag-json` encoded Advertisement (formatted for readability):
 }
 ```
 
-## Extended Providers
+### Extended Providers
 
 Encode a signed advertisement with an Extended Providers section and no context id or entries cid to announce that **all** previous and future entries are available from multiple providers or different protocols.
 
@@ -242,6 +291,7 @@ A `dag-json` encoded Advertisement (formatted for readability):
 ```
 
 </details>
+
 
 [`0x0900`]: https://github.com/multiformats/multicodec/blob/df81972d764f30da4ad32e1e5b778d8b619de477/table.csv?plain=1#L145
 [`0x0910`]: https://github.com/multiformats/multicodec/blob/df81972d764f30da4ad32e1e5b778d8b619de477/table.csv?plain=1#L146
