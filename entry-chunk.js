@@ -61,6 +61,7 @@ export class EntryChunk {
    * @param {Uint8Array} entry byte encoded multihash
    */
   add (entry) {
+    this.entries.push(entry)
     this._encodedEntriesLength += tokensToLength(new Token(Type.bytes, { length: entry.byteLength }))
   }
 

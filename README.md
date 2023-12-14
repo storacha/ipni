@@ -31,7 +31,7 @@ Encode an IPNI `EntryChunk` as a dag-cbor block from 1 or more multihashes.
 import { EntryChunk } from '@web3-storage/ipni'
 import { sha256 } from 'multiformats/hashes/sha2'
 
-const hash = await sha256.encode(new Uint8Array())
+const hash = await sha256.digest(new Uint8Array())
 const chunk = EntryChunk.fromMultihashes([hash])
 const block = await chunk.export()
 

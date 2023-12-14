@@ -38,6 +38,17 @@ test('fromCids', t => {
   })
 })
 
+test('add', async t => {
+  const chunk = EntryChunk.fromCids([emptyDirCid])
+  chunk.add(emptyDirCid.multihash.bytes)
+  t.like({
+    Entries: [
+      emptyDirCid.multihash.bytes,
+      emptyDirCid.multihash.bytes
+    ]
+  }, chunk.ipldView())
+})
+
 test('calculateDagCborSize', t => {
   const entries = new Array(1).fill(emptyDirCid.multihash.bytes)
   const chunk = encodeEntryChunk({ entries })
