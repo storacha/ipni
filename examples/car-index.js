@@ -5,7 +5,7 @@ import { base58btc } from 'multiformats/bases/base58'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { Provider, Advertisement } from '../index.js'
 import { MultihashIndexSortedReader } from 'cardex'
-import { EntryChunk } from '../entry-chunk.js'
+import { EntryChunk, RECOMMENDED_MAX_BLOCK_BYTES } from '../entry-chunk.js'
 
 /**
  * @typedef {import('../schema').Link } Link
@@ -24,8 +24,6 @@ const carCid = CID.parse('bagbaierarw3cf23e5fhc55yosqielfejjdl6rfrppotlnxl2lf6qu
 const carIndexStream = fs.createReadStream(`./${carCid.toString()}.car.idx`)
 const carIndexReader = MultihashIndexSortedReader.createReader({ reader: Readable.toWeb(carIndexStream).getReader() })
 
-const PREFERRED_BLOCK_SIZE = (1024 ** 2) * 1 // 1MiB
-
 let previous = null
 let entryChunk = new EntryChunk()
 
@@ -34,7 +32,7 @@ while (true) {
   if (done) break
   console.log(`📌 ${base58btc.encode(value.multihash.bytes)} @ ${value.offset}`)
   entryChunk.add(value.multihash.bytes)
-  if (entryChunk.calculateEncodedSize() >= PREFERRED_BLOCK_SIZE) {
+  if (entryChunk.calculateEncodedSize() >= RECOMMENDED_MAX_BLOCK_BYTES) {
     const entries = await writeEntryChunk(entryChunk)
     const context = carCid.bytes
     previous = await writeAdvert({ entries, context, provider, previous })

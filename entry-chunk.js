@@ -5,8 +5,22 @@ import * as DagCbor from '@ipld/dag-cbor'
 import { tokensToLength } from 'cborg/length'
 import { Token, Type } from 'cborg'
 
-export const MAX_BLOCK_BYTES = (1024 ** 2) * 4
-export const MAX_ENTRYCHUNK_CHAIN_LENGTH = 400 // or 65536? https://github.com/ipni/storetheindex/blob/e7ffb913a1191909d572febf09fb9aac6ef8bfab/deploy/manifests/prod/us-east-2/tenant/storetheindex/instances/inga/config.json#L83
+/**
+ * It is recommended to not create blocks bigger than 1MiB,
+ * but for data transfer protocols(like Bitswap) to handle up to 2MiB
+ * see: https://github.com/web3-storage/web3.storage/pull/1269#issuecomment-1108834504
+ */
+export const RECOMMENDED_MAX_BLOCK_BYTES = 1_048_576 // 1MiB
+
+/**
+ * How many EntryChunk `Next` links will an IPNI follow
+ * Spec recommends 400
+ * @see https://github.com/ipni/specs/blob/main/IPNI.md#entrychunk-chain
+ * The reference impl limits to 65536
+ * @see https://github.com/ipni/storetheindex/blob/e7ffb913a1191909d572febf09fb9aac6ef8bfab/deploy/manifests/prod/us-east-2/tenant/storetheindex/instances/inga/config.json#L83
+ */
+
+export const MAX_ENTRYCHUNK_CHAIN_LENGTH = 400 // or 65536?
 
 const CID_TAG = new Token(Type.tag, 42)
 

@@ -50,7 +50,7 @@ Chain EntryChunks together as a CID linked list via the `next` parameter.
 import fs from 'node:fs'
 import { Readable } from 'node:stream'
 import { MultihashIndexSortedReader } from 'cardex'
-const PREFERRED_BLOCK_SIZE = (1024 ** 2) * 1 // 1MiB
+import { EntryChunk, RECOMMENDED_MAX_BLOCK_BYTES } from '@web3-storage/ipni'
 
 const carIndexReader = MultihashIndexSortedReader.createReader({ 
   reader: Readable.toWeb(fs.createReadStream(`car.idx`)).getReader() 
@@ -61,7 +61,7 @@ while (true) {
   const { done, value } = await carIndexReader.read()
   if (done) break
   entryChunk.add(value.multihash.bytes)
-  if (entryChunk.calculateEncodedSize() >= PREFERRED_BLOCK_SIZE) {
+  if (entryChunk.calculateEncodedSize() >= RECOMMENDED_MAX_BLOCK_BYTES) {
     const block = await entryChunk.export()
     writeEntryChunk(block) // put to bucket
     entryChunk = new EntryChunk({ next: block.cid })
