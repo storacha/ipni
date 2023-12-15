@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.1.0](https://github.com/web3-storage/ipni/compare/v3.0.0...v3.1.0) (2023-12-15)
+
+
+### Features
+
+* add IPNI EntryChunk encoding ([#18](https://github.com/web3-storage/ipni/issues/18)) ([d4e44c3](https://github.com/web3-storage/ipni/commit/d4e44c328ad1a0c69e54d4565c9e38a451e0954c))
+
+
+### Bug Fixes
+
+* test that CID parameters are compatible CID types ([#17](https://github.com/web3-storage/ipni/issues/17)) ([b0ca303](https://github.com/web3-storage/ipni/commit/b0ca303e945bcc9e915e3b0c4ec2256342f97e1a))
+
 ## [3.0.0](https://github.com/web3-storage/ipni/compare/v2.0.0...v3.0.0) (2023-05-22)
 
 
