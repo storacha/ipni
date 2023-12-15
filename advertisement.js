@@ -1,3 +1,5 @@
+import * as Block from 'multiformats/block'
+import * as DagCbor from '@ipld/dag-cbor'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { concat } from 'uint8arrays/concat'
@@ -157,6 +159,14 @@ export class Advertisement {
       provider.encodeMetadata(),
       new Uint8Array([IsRm])
     ])
+  }
+
+  /**
+   * the dag-json encoded IPLD Block
+   */
+  async export () {
+    const value = await this.encodeAndSign()
+    return Block.encode({ codec: DagCbor, hasher: sha256, value })
   }
 }
 
